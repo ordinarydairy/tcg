@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from 'react'
+import { useAuth } from './AuthContext'
 import './Profile.css'
 
 const BLANK_CARDS = Array.from({ length: 10 }, (_, index) => ({
@@ -9,10 +10,14 @@ const DEFAULT_BIO =
   'This is a placeholder bio. You can edit it here; it is not saved yet.'
 
 function Profile() {
+  const { user } = useAuth()
   const fileInputId = useId()
   const bioId = useId()
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(DEFAULT_BIO)
+  const displayName = user?.display_name || 'Player'
+  const savedPhoto = user?.profile_photo
+  const photoSrc = avatarUrl || savedPhoto
 
   useEffect(() => {
     return () => {
@@ -41,13 +46,15 @@ function Profile() {
     <main className="profile">
       <section className="profile-identity">
         <div className="profile-avatar">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Your profile" />
+          {photoSrc ? (
+            <img src={photoSrc} alt={`${displayName}'s profile`} />
           ) : (
-            <div className="profile-avatar-placeholder" aria-hidden="true" />
+            <div className="profile-avatar-placeholder" aria-hidden="true">
+              {displayName.slice(0, 1).toUpperCase()}
+            </div>
           )}
         </div>
-        <h1 className="profile-name">Player</h1>
+        <h1 className="profile-name">{displayName}</h1>
         <label className="profile-photo-button" htmlFor={fileInputId}>
           Change photo
         </label>

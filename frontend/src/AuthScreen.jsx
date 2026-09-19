@@ -1,0 +1,162 @@
+import { useId, useState } from 'react'
+import { useAuth } from './AuthContext'
+
+export default function AuthScreen() {
+  const { login, register } = useAuth()
+  const [mode, setMode] = useState('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [photo, setPhoto] = useState(null)
+  const [preview, setPreview] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const photoId = useId()
+
+  function onPhotoChange(event) {
+    const file = event.target.files?.[0]
+    if (!file) {
+      setPhoto(null)
+      setPreview('')
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image for your profile photo.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Profile photo must be 5MB or smaller.')
+      return
+    }
+    setError('')
+    setPhoto(file)
+    setPreview(URL.createObjectURL(file))
+  }
+
+  async function onSubmit(event) {
+    event.preventDefault()
+    setError('')
+    setSubmitting(true)
+    try {
+      if (mode === 'signin') {
+        await login(email, password)
+      } else {
+        await register({ email, password, displayName, photo })
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <main className="auth-page">
+      <div className="auth-card">
+        <p className="eyebrow">TCG</p>
+        <h1>{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
+        <p className="lede">
+          {mode === 'signin'
+            ? 'Use your email and password to continue.'
+            : 'Set a display name and profile photo for your player profile.'}
+        </p>
+
+        <div className="mode-toggle" role="tablist" aria-label="Authentication mode">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'signin'}
+            className={mode === 'signin' ? 'active' : ''}
+            onClick={() => {
+              setMode('signin')
+              setError('')
+            }}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'signup'}
+            className={mode === 'signup' ? 'active' : ''}
+            onClick={() => {
+              setMode('signup')
+              setError('')
+            }}
+          >
+            Create account
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit}>
+          {mode === 'signup' && (
+            <>
+              <label>
+                Display name
+                <input
+                  type="text"
+                  name="displayName"
+                  autoComplete="nickname"
+                  minLength={2}
+                  maxLength={50}
+                  required
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                />
+              </label>
+
+              <div className="photo-field">
+                <span className="photo-label">Profile photo</span>
+                <label className="photo-picker" htmlFor={photoId}>
+                  <span className="photo-preview" aria-hidden="true">
+                    {preview ? <img src={preview} alt="" /> : <span>Add</span>}
+                  </span>
+                  <span>{preview ? 'Change photo' : 'Choose a photo'}</span>
+                </label>
+                <input
+                  id={photoId}
+                  type="file"
+                  name="profilePhoto"
+                  accept="image/*"
+                  required
+                  onChange={onPhotoChange}
+                />
+              </div>
+            </>
+          )}
+
+          <label>
+            Email
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              type="password"
+              name="password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              minLength={8}
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+
+          {error ? <p className="form-error" role="alert">{error}</p> : null}
+
+          <button type="submit" className="primary" disabled={submitting}>
+            {submitting ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          </button>
+        </form>
+      </div>
+    </main>
+  )
+}
