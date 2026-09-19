@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from .models import Card
+
 
 # Create your views here.
 
@@ -97,10 +99,79 @@ User's story:
 
         scores = PhotoScores.model_validate_json(response.text)
 
-        return Response(scores.model_dump())
+        overall_score = (
+            scores.photo_quality
+            + scores.location_significance
+            + scores.occasion
+            + scores.uniqueness
+            + scores.memory_story
+        ) * 2
+
+        if overall_score >= 90:
+            rarity = "Legendary"
+        elif overall_score >= 75:
+            rarity = "Epic"
+        elif overall_score >= 60:
+            rarity = "Rare"
+        elif overall_score >= 40:
+            rarity = "Uncommon"
+        else:
+            rarity = "Common"
+
+        card = Card.objects.create(
+            image=image,
+            story=story,
+            photo_quality=scores.photo_quality,
+            location_significance=scores.location_significance,
+            occasion=scores.occasion,
+            uniqueness=scores.uniqueness,
+            memory_story=scores.memory_story,
+            overall_score=overall_score,
+            rarity=rarity,
+        )
+
+        return Response({
+            "id": card.id,
+            "image": card.image.url,
+            "story": card.story,
+            "scores": {
+                "photo_quality": card.photo_quality,
+                "location_significance": card.location_significance,
+                "occasion": card.occasion,
+                "uniqueness": card.uniqueness,
+                "memory_story": card.memory_story,
+            },
+            "overall_score": card.overall_score,
+            "rarity": card.rarity,
+        })
 
     except Exception as error:
         return Response(
             {"error": str(error)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+@api_view(["GET"])
+def get_cards(request):
+    cards = Card.objects.all().order_by("-created_at")
+
+    data = []
+
+    for card in cards:
+        data.append({
+            "id": card.id,
+            "image": card.image.url,
+            "story": card.story,
+            "scores": {
+                "photo_quality": card.photo_quality,
+                "location_significance": card.location_significance,
+                "occasion": card.occasion,
+                "uniqueness": card.uniqueness,
+                "memory_story": card.memory_story,
+            },
+            "overall_score": card.overall_score,
+            "rarity": card.rarity,
+            "created_at": card.created_at,
+        })
+
+    return Response(data)

@@ -71,3 +71,21 @@ export function register({ email, password, displayName, photo }) {
 export function logout() {
   return request('/api/auth/logout/', { method: 'POST' })
 }
+
+export function fetchCards() {
+  return request('/api/cards/')
+}
+
+export function cardImageSrc(image) {
+  if (!image) {
+    return ''
+  }
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    try {
+      return new URL(image).pathname
+    } catch {
+      return image
+    }
+  }
+  return image
+}

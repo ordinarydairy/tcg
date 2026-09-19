@@ -182,6 +182,14 @@
   border-radius: 6px;
   background: var(--code-bg);
   border: 1px dashed var(--border);
+  overflow: hidden;
+}
+
+.blank-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .blank-card-title {
@@ -189,4 +197,10 @@
   width: 70%;
   border-radius: 4px;
   background: var(--border);
+}
+
+.blank-card-rarity {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-h);
 }

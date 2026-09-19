@@ -1,10 +1,9 @@
 import { useEffect, useId, useState } from 'react'
+import { cardImageSrc, fetchCards } from './api'
 import { useAuth } from './AuthContext'
 import './Profile.css'
 
-const BLANK_CARDS = Array.from({ length: 10 }, (_, index) => ({
-  id: index + 1,
-}))
+const SLOT_COUNT = 10
 
 const DEFAULT_BIO =
   'This is a placeholder bio. You can edit it here; it is not saved yet.'
@@ -24,9 +23,37 @@ function Profile() {
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(DEFAULT_BIO)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [cards, setCards] = useState([])
   const displayName = user?.display_name || 'Player'
   const savedPhoto = user?.profile_photo
   const photoSrc = avatarUrl || savedPhoto
+  const cardSlots = [
+    ...cards,
+    ...Array.from(
+      { length: Math.max(0, SLOT_COUNT - cards.length) },
+      (_, index) => ({ id: `empty-${index}` }),
+    ),
+  ]
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadCards() {
+      try {
+        const data = await fetchCards()
+        if (!cancelled && Array.isArray(data)) {
+          setCards(data)
+        }
+      } catch {
+        if (!cancelled) {
+          setCards([])
+        }
+      }
+    }
+    loadCards()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -110,15 +137,28 @@ function Profile() {
       <section className="profile-cards" aria-labelledby="profile-cards-heading">
         <h2 id="profile-cards-heading">Cards</h2>
         <p className="profile-cards-note">
-          Blank slots for a future card upload system.
+          {cards.length
+            ? 'Saved cards from your collection.'
+            : 'Empty slots until cards are saved on your account.'}
         </p>
         <ul className="card-grid">
-          {BLANK_CARDS.map((card) => (
-            <li key={card.id} className="blank-card">
-              <div className="blank-card-art" />
-              <div className="blank-card-title" />
-            </li>
-          ))}
+          {cardSlots.map((card) => {
+            const imageSrc = cardImageSrc(card.image)
+            return (
+              <li key={card.id} className="blank-card">
+                <div className="blank-card-art">
+                  {imageSrc ? (
+                    <img src={imageSrc} alt={card.rarity || 'Saved card'} />
+                  ) : null}
+                </div>
+                {card.rarity ? (
+                  <p className="blank-card-rarity">{card.rarity}</p>
+                ) : (
+                  <div className="blank-card-title" />
+                )}
+              </li>
+            )
+          })}
         </ul>
       </section>
     </main>
