@@ -85,3 +85,62 @@ class AuthApiTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
+
+
+class FriendshipApiTests(TestCase):
+    def setUp(self):
+        self.claire = User.objects.create_user(
+            email='claire@example.com',
+            password='secretpass123',
+            display_name='Claire',
+        )
+        self.sam = User.objects.create_user(
+            email='sam@example.com',
+            password='secretpass123',
+            display_name='Sam',
+        )
+        self.riley = User.objects.create_user(
+            email='riley@example.com',
+            password='secretpass123',
+            display_name='Riley',
+        )
+        self.client.force_login(self.claire)
+
+    def test_suggestions_and_search(self):
+        suggestions = self.client.get(reverse('friend-suggestions'))
+        names = {user['display_name'] for user in suggestions.json()['users']}
+        self.assertEqual(names, {'Sam', 'Riley'})
+
+        search = self.client.get(reverse('friend-search'), {'q': 'sa'})
+        self.assertEqual(search.json()['users'][0]['display_name'], 'Sam')
+
+    def test_send_request_accept_and_unfriend(self):
+        send = self.client.post(
+            reverse('friend-request'),
+            {'user_id': self.sam.id},
+            content_type='application/json',
+        )
+        self.assertEqual(send.status_code, 201)
+        self.assertEqual(send.json()['friendship_status'], 'pending_sent')
+
+        self.client.force_login(self.sam)
+        incoming = self.client.get(reverse('friends-list'))
+        self.assertEqual(incoming.json()['incoming'][0]['display_name'], 'Claire')
+
+        accept = self.client.post(
+            reverse('friend-request'),
+            {'user_id': self.claire.id},
+            content_type='application/json',
+        )
+        self.assertEqual(accept.json()['friendship_status'], 'friends')
+
+        friends = self.client.get(reverse('friends-list'))
+        self.assertEqual(friends.json()['friends'][0]['display_name'], 'Claire')
+
+        profile = self.client.get(reverse('player-detail', args=[self.claire.id]))
+        self.assertEqual(profile.json()['friendship_status'], 'friends')
+        self.assertNotIn('email', profile.json())
+
+        remove = self.client.delete(reverse('friend-detail', args=[self.claire.id]))
+        self.assertEqual(remove.status_code, 204)
+        self.assertEqual(self.client.get(reverse('friends-list')).json()['friends'], [])
