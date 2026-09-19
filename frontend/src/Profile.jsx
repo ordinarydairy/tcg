@@ -1,7 +1,10 @@
 import { useEffect, useId, useState } from 'react'
 import { cardImageSrc, fetchCards, gradeCard } from './api'
 import CardUploadModal from './CardUploadModal.jsx'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import { fetchPlayer, removeFriend, sendFriendRequest } from './api'
+import { friendshipActionLabel } from './PlayerRow'
 import './Profile.css'
 
 const SLOT_COUNT = 10
@@ -19,6 +22,13 @@ function Profile() {
   const fileInputId = useId()
   const bioId = useId()
   const cardInputId = useId()
+  const { userId } = useParams()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const fileInputId = useId()
+  const bioId = useId()
+  const isOwn = !userId || String(user?.id) === String(userId)
+  const [remotePlayer, setRemotePlayer] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(user?.bio || '')
   const [bioStatus, setBioStatus] = useState('')
@@ -63,6 +73,26 @@ function Profile() {
   useEffect(() => {
     setBio(user?.bio || '')
   }, [user?.bio])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const player = isOwn ? user : remotePlayer
+
+  useEffect(() => {
+    if (isOwn) {
+      return undefined
+    }
+    let cancelled = false
+    fetchPlayer(userId)
+      .then((data) => {
+        if (!cancelled) setRemotePlayer(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [isOwn, userId])
 
   useEffect(() => {
     return () => {
@@ -165,27 +195,68 @@ function Profile() {
     })
   }
 
+  async function handleFriendship() {
+    if (!player) return
+    setBusy(true)
+    setError('')
+    try {
+      if (player.friendship_status === 'friends') {
+        await removeFriend(player.id)
+        setRemotePlayer(await fetchPlayer(player.id))
+      } else {
+        const updated = await sendFriendRequest(player.id)
+        setRemotePlayer(updated)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!isOwn && !player && !error) {
+    return (
+      <main className="profile">
+        <p className="lede">Loading…</p>
+      </main>
+    )
+  }
+
+  const displayName = player?.display_name || 'Player'
+  const savedPhoto = player?.profile_photo
+  const photoSrc = isOwn ? avatarUrl || savedPhoto : savedPhoto
+  const actionLabel =
+    player?.friendship_status === 'friends' ? 'Remove friend' : friendshipActionLabel(player?.friendship_status)
+
   return (
     <main className="profile">
       <header className="profile-toolbar">
-        <button
-          type="button"
-          className="settings-gear"
-          aria-label="Settings"
-          aria-expanded={settingsOpen}
-          onClick={() => setSettingsOpen((open) => !open)}
-        >
-          <GearIcon />
-        </button>
-        {settingsOpen ? (
-          <div className="settings-panel" role="dialog" aria-label="Account settings">
-            <p className="settings-heading">Account</p>
-            {user?.email ? <p className="settings-email">{user.email}</p> : null}
-            <button type="button" className="ghost" onClick={() => logout()}>
-              Sign out
+        {isOwn ? (
+          <>
+            <button
+              type="button"
+              className="settings-gear"
+              aria-label="Settings"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              <GearIcon />
             </button>
-          </div>
-        ) : null}
+            {settingsOpen ? (
+              <div className="settings-panel" role="dialog" aria-label="Account settings">
+                <p className="settings-heading">Account</p>
+                {user?.email ? <p className="settings-email">{user.email}</p> : null}
+                <button type="button" className="ghost" onClick={() => logout()}>
+                  Sign out
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <button type="button" className="ghost" onClick={() => navigate(-1)}>
+            Back
+          </button>
+        )}
       </header>
 
       <section className="profile-identity">
@@ -228,6 +299,45 @@ function Profile() {
         <p className="profile-bio-hint">
           {savingBio ? 'Saving…' : bioStatus || 'Press Enter to save. Shift+Enter adds a new line.'}
         </p>
+        {isOwn ? (
+          <>
+            {user?.email ? <p className="profile-email">{user.email}</p> : null}
+            <label className="profile-photo-button" htmlFor={fileInputId}>
+              Change photo
+            </label>
+            <input
+              id={fileInputId}
+              className="profile-photo-input"
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+            />
+            <label className="profile-bio-label" htmlFor={bioId}>
+              Bio
+            </label>
+            <textarea
+              id={bioId}
+              className="profile-bio"
+              rows={3}
+              value={bio}
+              onChange={(event) => setBio(event.target.value)}
+            />
+          </>
+        ) : (
+          <>
+            {error ? <p className="form-error">{error}</p> : null}
+            {player?.friendship_status && player.friendship_status !== 'self' ? (
+              <button
+                type="button"
+                className={player.friendship_status === 'friends' ? 'ghost' : 'primary profile-friend-button'}
+                disabled={busy || player.friendship_status === 'pending_sent'}
+                onClick={handleFriendship}
+              >
+                {busy ? 'Please wait…' : actionLabel}
+              </button>
+            ) : null}
+          </>
+        )}
       </section>
 
       <section className="profile-cards" aria-labelledby="profile-cards-heading">

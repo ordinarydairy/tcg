@@ -28,6 +28,7 @@ function App() {
         <Route path="/" element={<HomeScreen />} />
         <Route path="/friends" element={<FriendsScreen />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/users/:userId" element={<Profile />} />
       </Route>
     </Routes>
   )

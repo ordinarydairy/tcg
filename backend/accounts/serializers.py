@@ -1,5 +1,8 @@
 from django.contrib.auth import authenticate, get_user_model
+from django.db.models import Q
 from rest_framework import serializers
+
+from .models import Friendship
 
 User = get_user_model()
 
@@ -9,6 +12,30 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'display_name', 'profile_photo', 'bio')
         read_only_fields = ('id', 'email', 'display_name', 'profile_photo')
+
+
+class PlayerSerializer(serializers.ModelSerializer):
+    friendship_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'display_name', 'profile_photo', 'friendship_status')
+        read_only_fields = fields
+
+    def get_friendship_status(self, player):
+        viewer = self.context.get('viewer')
+        if viewer is None or viewer.id == player.id:
+            return 'self'
+        link = Friendship.objects.filter(
+            Q(from_user=viewer, to_user=player) | Q(from_user=player, to_user=viewer)
+        ).first()
+        if link is None:
+            return 'none'
+        if link.status == Friendship.ACCEPTED:
+            return 'friends'
+        if link.from_user_id == viewer.id:
+            return 'pending_sent'
+        return 'pending_received'
 
 
 class RegisterSerializer(serializers.ModelSerializer):

@@ -105,4 +105,29 @@ export function cardImageSrc(image) {
     }
   }
   return image
+export function fetchFriends() {
+  return request('/api/friends/')
+}
+
+export function fetchSuggestions() {
+  return request('/api/friends/suggestions/')
+}
+
+export function searchPlayers(query) {
+  return request(`/api/friends/search/?q=${encodeURIComponent(query)}`)
+}
+
+export function sendFriendRequest(userId) {
+  return request('/api/friends/requests/', {
+    method: 'POST',
+    body: { user_id: userId },
+  })
+}
+
+export function removeFriend(userId) {
+  return request(`/api/friends/${userId}/`, { method: 'DELETE' })
+}
+
+export function fetchPlayer(userId) {
+  return request(`/api/users/${userId}/`)
 }

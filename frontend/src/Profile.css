@@ -111,6 +111,12 @@
   font-size: 16px;
 }
 
+.profile-friend-button {
+  width: auto;
+  margin-top: 8px;
+  padding: 10px 16px;
+}
+
 .profile-photo-button {
   cursor: pointer;
   font-size: 16px;

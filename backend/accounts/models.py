@@ -41,3 +41,37 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class Friendship(models.Model):
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    STATUS_CHOICES = (
+        (PENDING, 'Pending'),
+        (ACCEPTED, 'Accepted'),
+    )
+
+    from_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_friendships',
+    )
+    to_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_friendships',
+    )
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('from_user', 'to_user'), name='unique_friendship_pair'),
+            models.CheckConstraint(
+                condition=~models.Q(from_user=models.F('to_user')),
+                name='prevent_self_friendship',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.from_user_id} -> {self.to_user_id} ({self.status})'
