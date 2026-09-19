@@ -8,6 +8,7 @@ function cookieCsrfToken() {
 function formatError(payload, fallback) {
   if (!payload || typeof payload !== 'object') return fallback
   if (typeof payload.detail === 'string') return payload.detail
+  if (typeof payload.error === 'string') return payload.error
   if (Array.isArray(payload.non_field_errors) && payload.non_field_errors[0]) {
     return payload.non_field_errors[0]
   }
@@ -52,6 +53,13 @@ export function fetchMe() {
   return request('/api/auth/me/')
 }
 
+export function updateMe(fields) {
+  return request('/api/auth/me/', {
+    method: 'PATCH',
+    body: fields,
+  })
+}
+
 export function login(email, password) {
   return request('/api/auth/login/', {
     method: 'POST',
@@ -72,6 +80,31 @@ export function logout() {
   return request('/api/auth/logout/', { method: 'POST' })
 }
 
+export function fetchCards() {
+  return request('/api/cards/')
+}
+
+export function gradeCard({ image, story }) {
+  const body = new FormData()
+  body.append('image', image)
+  if (story) {
+    body.append('story', story)
+  }
+  return request('/api/grade-photo/', { method: 'POST', body })
+}
+
+export function cardImageSrc(image) {
+  if (!image) {
+    return ''
+  }
+  if (image.startsWith('http://') || image.startsWith('https://')) {
+    try {
+      return new URL(image).pathname
+    } catch {
+      return image
+    }
+  }
+  return image
 export function fetchFriends() {
   return request('/api/friends/')
 }

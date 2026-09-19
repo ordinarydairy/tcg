@@ -86,6 +86,30 @@ class AuthApiTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_owner_can_save_bio(self):
+        user = User.objects.create_user(
+            email='player@example.com',
+            password='secretpass123',
+            display_name='Claire',
+        )
+        self.client.force_login(user)
+        response = self.client.patch(
+            reverse('me'),
+            {'bio': '  Collector of rare cards.  '},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['user']['bio'], 'Collector of rare cards.')
+        user.refresh_from_db()
+        self.assertEqual(user.bio, 'Collector of rare cards.')
+
+    def test_anonymous_cannot_save_bio(self):
+        response = self.client.patch(
+            reverse('me'),
+            {'bio': 'Nope'},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 401)
 
 class FriendshipApiTests(TestCase):
     def setUp(self):

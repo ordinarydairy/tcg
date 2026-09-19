@@ -142,6 +142,12 @@
   margin-top: 8px;
 }
 
+.profile-bio-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
 .profile-bio {
   width: min(420px, 100%);
   resize: vertical;
@@ -154,13 +160,132 @@
   text-align: center;
 }
 
-.profile-cards {
-  text-align: left;
+.profile-cards-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
-.profile-cards-note {
-  margin-bottom: 20px;
+.profile-cards-header .profile-cards-note {
+  margin-bottom: 0;
+}
+
+.profile-cards-header h2 {
+  margin: 0 0 8px;
+}
+
+.card-upload-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(8, 6, 13, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.card-upload-dialog {
+  width: min(760px, 100%);
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-crop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .card-crop-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.card-crop-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-crop-preview-label {
+  margin: 0;
+  font-size: 13px;
   color: var(--text);
+}
+
+.card-preview-card {
+  width: 148px;
+}
+
+.card-preview-card canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-upload-dialog h2 {
+  margin: 0;
+}
+
+.card-upload-note {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.card-cropper {
+  position: relative;
+  width: 100%;
+  height: min(360px, 50svh);
+  background: var(--code-bg);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.card-zoom-label,
+.card-upload-dialog label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.card-story {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.card-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.card-upload-submit {
+  width: auto;
+  margin-top: 0;
 }
 
 .card-grid {
@@ -188,6 +313,14 @@
   border-radius: 6px;
   background: var(--code-bg);
   border: 1px dashed var(--border);
+  overflow: hidden;
+}
+
+.blank-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .blank-card-title {
@@ -195,4 +328,88 @@
   width: 70%;
   border-radius: 4px;
   background: var(--border);
+}
+
+.blank-card-rarity {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.blank-card-button {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-story-dialog {
+  width: min(560px, 100%);
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  gap: 20px;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .card-story-dialog {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-story-art {
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.card-story-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-story-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-story-kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.card-story-copy h2 {
+  margin: 0;
+}
+
+.card-story-text {
+  margin: 0;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
+.card-story-copy .ghost {
+  align-self: flex-start;
+  margin-top: 8px;
 }
