@@ -1,0 +1,126 @@
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 40px 24px 64px;
+  gap: 40px;
+}
+
+.profile-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--code-bg);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 48px;
+}
+
+.profile-name {
+  font-size: 32px;
+  margin: 8px 0 0;
+  letter-spacing: -0.5px;
+}
+
+.profile-photo-button {
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.profile-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.profile-bio-label {
+  font-size: 14px;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.profile-bio {
+  width: min(420px, 100%);
+  resize: vertical;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.profile-cards {
+  text-align: left;
+}
+
+.profile-cards-note {
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.card-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.blank-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--social-bg);
+  padding: 12px;
+  aspect-ratio: 2 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blank-card-art {
+  flex: 1;
+  border-radius: 6px;
+  background: var(--code-bg);
+  border: 1px dashed var(--border);
+}
+
+.blank-card-title {
+  height: 12px;
+  width: 70%;
+  border-radius: 4px;
+  background: var(--border);
+}

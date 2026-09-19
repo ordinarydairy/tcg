@@ -1,0 +1,30 @@
+.site-header {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+}
+
+.site-nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.site-nav a {
+  color: var(--text-h);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--social-bg);
+  border: 1px solid transparent;
+  font-size: 16px;
+}
+
+.site-nav a:hover {
+  border-color: var(--accent-border);
+}
+
+.site-nav a.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: none;
+}
