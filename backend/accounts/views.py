@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import LoginSerializer, ProfileUpdateSerializer, RegisterSerializer, UserSerializer
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -57,4 +57,15 @@ class MeView(APIView):
     def get(self, request):
         if not request.user.is_authenticated:
             return Response({'user': None})
+        return Response({'user': UserSerializer(request.user, context={'request': request}).data})
+
+    def patch(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication credentials were not provided.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response({'user': UserSerializer(request.user, context={'request': request}).data})

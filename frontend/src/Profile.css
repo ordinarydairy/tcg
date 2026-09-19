@@ -136,6 +136,12 @@
   margin-top: 8px;
 }
 
+.profile-bio-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
 .profile-bio {
   width: min(420px, 100%);
   resize: vertical;

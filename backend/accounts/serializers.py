@@ -7,8 +7,8 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'display_name', 'profile_photo')
-        read_only_fields = fields
+        fields = ('id', 'email', 'display_name', 'profile_photo', 'bio')
+        read_only_fields = ('id', 'email', 'display_name', 'profile_photo')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -27,6 +27,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('bio',)
+
+    def validate_bio(self, value):
+        return value.strip()[:500]
 
 
 class LoginSerializer(serializers.Serializer):

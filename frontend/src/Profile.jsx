@@ -6,9 +6,6 @@ import './Profile.css'
 
 const SLOT_COUNT = 10
 
-const DEFAULT_BIO =
-  'This is a placeholder bio. You can edit it here; it is not saved yet.'
-
 function GearIcon() {
   return (
     <svg className="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -18,12 +15,14 @@ function GearIcon() {
 }
 
 function Profile() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateProfile } = useAuth()
   const fileInputId = useId()
   const bioId = useId()
   const cardInputId = useId()
   const [avatarUrl, setAvatarUrl] = useState(null)
-  const [bio, setBio] = useState(DEFAULT_BIO)
+  const [bio, setBio] = useState(user?.bio || '')
+  const [bioStatus, setBioStatus] = useState('')
+  const [savingBio, setSavingBio] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [cards, setCards] = useState([])
   const [uploadQueue, setUploadQueue] = useState([])
@@ -60,6 +59,10 @@ function Profile() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    setBio(user?.bio || '')
+  }, [user?.bio])
 
   useEffect(() => {
     return () => {
@@ -121,6 +124,29 @@ function Profile() {
       setUploadError(error.message || 'Could not upload this card.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function saveBio() {
+    if (savingBio) {
+      return
+    }
+    setSavingBio(true)
+    setBioStatus('')
+    try {
+      await updateProfile({ bio })
+      setBioStatus('Saved')
+    } catch (error) {
+      setBioStatus(error.message || 'Could not save bio.')
+    } finally {
+      setSavingBio(false)
+    }
+  }
+
+  function handleBioKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      saveBio()
     }
   }
 
@@ -190,9 +216,18 @@ function Profile() {
           id={bioId}
           className="profile-bio"
           rows={3}
+          maxLength={500}
           value={bio}
-          onChange={(event) => setBio(event.target.value)}
+          onChange={(event) => {
+            setBio(event.target.value)
+            setBioStatus('')
+          }}
+          onKeyDown={handleBioKeyDown}
+          placeholder="Write a short bio. Press Enter to save."
         />
+        <p className="profile-bio-hint">
+          {savingBio ? 'Saving…' : bioStatus || 'Press Enter to save. Shift+Enter adds a new line.'}
+        </p>
       </section>
 
       <section className="profile-cards" aria-labelledby="profile-cards-heading">

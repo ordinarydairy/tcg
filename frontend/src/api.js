@@ -53,6 +53,13 @@ export function fetchMe() {
   return request('/api/auth/me/')
 }
 
+export function updateMe(fields) {
+  return request('/api/auth/me/', {
+    method: 'PATCH',
+    body: fields,
+  })
+}
+
 export function login(email, password) {
   return request('/api/auth/login/', {
     method: 'POST',

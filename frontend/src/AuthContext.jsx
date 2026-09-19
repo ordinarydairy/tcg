@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { ensureCsrf, fetchMe, login as loginRequest, logout as logoutRequest, register as registerRequest } from './api'
+import { ensureCsrf, fetchMe, login as loginRequest, logout as logoutRequest, register as registerRequest, updateMe as updateMeRequest } from './api'
 
 const AuthContext = createContext(null)
 
@@ -48,6 +48,11 @@ export function AuthProvider({ children }) {
           await ensureCsrf()
           setUser(null)
         }
+      },
+      async updateProfile(fields) {
+        const data = await updateMeRequest(fields)
+        setUser(data.user)
+        return data.user
       },
     }),
     [user, loading],
