@@ -17,8 +17,7 @@ class CsrfView(APIView):
     authentication_classes = []
 
     def get(self, request):
-        get_token(request)
-        return Response({'detail': 'ok'})
+        return Response({'detail': 'ok', 'csrfToken': get_token(request)})
 
 
 class RegisterView(APIView):

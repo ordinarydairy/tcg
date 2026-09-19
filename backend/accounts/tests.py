@@ -41,12 +41,21 @@ class AuthApiTests(TestCase):
             password='secretpass123',
             display_name='Claire',
         )
+        missing = self.client.post(
+            reverse('login'),
+            {'email': 'missing@example.com', 'password': 'secretpass123'},
+            content_type='application/json',
+        )
+        self.assertEqual(missing.status_code, 400)
+        self.assertIn('No account is connected to this email.', missing.json()['email'])
+
         bad = self.client.post(
             reverse('login'),
             {'email': 'player@example.com', 'password': 'wrong-password'},
             content_type='application/json',
         )
         self.assertEqual(bad.status_code, 400)
+        self.assertIn('Incorrect password.', bad.json()['password'])
 
         ok = self.client.post(
             reverse('login'),

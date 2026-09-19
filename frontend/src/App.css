@@ -111,6 +111,19 @@ input[type='text'] {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
+  width: 100%;
+}
+
+.password-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.password-toggle {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  white-space: nowrap;
 }
 
 .photo-field {

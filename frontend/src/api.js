@@ -1,4 +1,6 @@
-function csrfToken() {
+let csrf = ''
+
+function cookieCsrfToken() {
   const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/)
   return match ? decodeURIComponent(match[1]) : ''
 }
@@ -19,7 +21,7 @@ async function request(path, { method = 'GET', body, headers } = {}) {
     method,
     credentials: 'include',
     headers: {
-      'X-CSRFToken': csrfToken(),
+      'X-CSRFToken': csrf || cookieCsrfToken(),
       ...(isFormData || !body ? {} : { 'Content-Type': 'application/json' }),
       ...headers,
     },
@@ -28,10 +30,17 @@ async function request(path, { method = 'GET', body, headers } = {}) {
 
   if (response.status === 204) return null
 
-  const payload = await response.json().catch(() => null)
+  const contentType = response.headers.get('content-type') || ''
+  const payload = contentType.includes('application/json')
+    ? await response.json().catch(() => null)
+    : null
   if (!response.ok) {
     throw new Error(formatError(payload, 'Request failed. Please try again.'))
   }
+  if (!payload) {
+    throw new Error('Could not reach the API. Try refreshing the page.')
+  }
+  if (payload.csrfToken) csrf = payload.csrfToken
   return payload
 }
 
