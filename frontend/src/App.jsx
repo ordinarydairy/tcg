@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import AuthScreen from './AuthScreen'
+import FriendsScreen from './FriendsScreen'
 import HomeScreen from './HomeScreen'
 import Layout from './Layout.jsx'
 import Profile from './Profile.jsx'
@@ -25,6 +26,7 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomeScreen />} />
+        <Route path="/friends" element={<FriendsScreen />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>
