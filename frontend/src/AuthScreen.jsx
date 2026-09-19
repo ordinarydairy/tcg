@@ -11,6 +11,7 @@ export default function AuthScreen() {
   const [preview, setPreview] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const photoId = useId()
 
   function onPhotoChange(event) {
@@ -139,15 +140,25 @@ export default function AuthScreen() {
 
           <label>
             Password
-            <input
-              type="password"
-              name="password"
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-              minLength={8}
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
+            <span className="password-row">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                minLength={8}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <button
+                type="button"
+                className="ghost password-toggle"
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </span>
           </label>
 
           {error ? <p className="form-error" role="alert">{error}</p> : null}

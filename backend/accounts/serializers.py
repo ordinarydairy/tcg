@@ -34,12 +34,19 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     def validate(self, attrs):
+        email = attrs.get('email')
+        if not User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(
+                {'email': 'No account is connected to this email.'}
+            )
         user = authenticate(
             request=self.context.get('request'),
-            email=attrs.get('email'),
+            email=email,
             password=attrs.get('password'),
         )
         if user is None:
-            raise serializers.ValidationError('Invalid email or password.')
+            raise serializers.ValidationError(
+                {'password': 'Incorrect password.'}
+            )
         attrs['user'] = user
         return attrs
