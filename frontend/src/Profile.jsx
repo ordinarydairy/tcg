@@ -55,6 +55,7 @@ function Profile() {
           )}
         </div>
         <h1 className="profile-name">{displayName}</h1>
+        {user?.email ? <p className="profile-email">{user.email}</p> : null}
         <label className="profile-photo-button" htmlFor={fileInputId}>
           Change photo
         </label>
