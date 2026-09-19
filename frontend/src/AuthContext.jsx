@@ -42,9 +42,12 @@ export function AuthProvider({ children }) {
         return nextUser
       },
       async logout() {
-        await logoutRequest()
-        await ensureCsrf()
-        setUser(null)
+        try {
+          await logoutRequest()
+        } finally {
+          await ensureCsrf()
+          setUser(null)
+        }
       },
     }),
     [user, loading],
