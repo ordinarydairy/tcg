@@ -29,6 +29,7 @@ function Profile() {
   const [uploadQueue, setUploadQueue] = useState([])
   const [uploadError, setUploadError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [selectedCard, setSelectedCard] = useState(null)
   const displayName = user?.display_name || 'Player'
   const savedPhoto = user?.profile_photo
   const photoSrc = avatarUrl || savedPhoto
@@ -219,23 +220,65 @@ function Profile() {
         <ul className="card-grid">
           {cardSlots.map((card) => {
             const imageSrc = cardImageSrc(card.image)
+            const isSaved = Boolean(imageSrc)
             return (
               <li key={card.id} className="blank-card">
-                <div className="blank-card-art">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={card.rarity || 'Saved card'} />
-                  ) : null}
-                </div>
-                {card.rarity ? (
-                  <p className="blank-card-rarity">{card.rarity}</p>
+                {isSaved ? (
+                  <button
+                    type="button"
+                    className="blank-card-button"
+                    onClick={() => setSelectedCard(card)}
+                  >
+                    <div className="blank-card-art">
+                      <img src={imageSrc} alt="" />
+                    </div>
+                    <p className="blank-card-rarity">{card.rarity}</p>
+                  </button>
                 ) : (
-                  <div className="blank-card-title" />
+                  <>
+                    <div className="blank-card-art" />
+                    <div className="blank-card-title" />
+                  </>
                 )}
               </li>
             )
           })}
         </ul>
       </section>
+      {selectedCard ? (
+        <div className="card-upload-backdrop" role="presentation" onClick={() => setSelectedCard(null)}>
+          <div
+            className="card-story-dialog"
+            role="dialog"
+            aria-labelledby="card-story-title"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="card-story-art">
+              <img
+                src={cardImageSrc(selectedCard.image)}
+                alt={selectedCard.rarity || 'Saved card'}
+              />
+            </div>
+            <div className="card-story-copy">
+              <p className="card-story-kicker">{selectedCard.rarity}</p>
+              <h2 id="card-story-title">
+                {selectedCard.overall_score != null
+                  ? `${selectedCard.overall_score}/100`
+                  : 'Card'}
+              </h2>
+              <p className="card-story-text">
+                {selectedCard.story?.trim()
+                  ? selectedCard.story
+                  : 'No story was added for this card.'}
+              </p>
+              <button type="button" className="ghost" onClick={() => setSelectedCard(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {uploadQueue[0] ? (
         <CardUploadModal
           key={uploadQueue[0].url}

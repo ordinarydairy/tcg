@@ -323,3 +323,81 @@
   font-size: 13px;
   color: var(--text-h);
 }
+
+.blank-card-button {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-story-dialog {
+  width: min(560px, 100%);
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  gap: 20px;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .card-story-dialog {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-story-art {
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.card-story-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-story-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-story-kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.card-story-copy h2 {
+  margin: 0;
+}
+
+.card-story-text {
+  margin: 0;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
+.card-story-copy .ghost {
+  align-self: flex-start;
+  margin-top: 8px;
+}

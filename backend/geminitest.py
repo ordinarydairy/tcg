@@ -18,17 +18,18 @@ Then set the two values in the CONFIG section below and run:
 """
 
 import json
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# ---------------------------------------------------------------------------
-# CONFIG - edit these two lines only
-# ---------------------------------------------------------------------------
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
-# Paste your key from Google AI Studio (https://aistudio.google.com/apikey).
-# NOTE: this is fine for a local test. In the real app the key lives on the
-# server, never in the browser and never committed to git.
-API_KEY = "AIzaSyBL5C3h61NVmZOkVrDwRHwm80PYTotgUMM"
+API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY:
+    raise SystemExit("GEMINI_API_KEY was not found. Put it in backend/.env")
 
 # The photo to grade. Use the full path to a real image on your computer.
 PHOTO_PATH = "/Users/sophi/OneDrive/Pictures/3.png"
