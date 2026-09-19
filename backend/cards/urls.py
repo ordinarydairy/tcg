@@ -1,15 +1,9 @@
 from django.urls import path
-from .views import grade_photo, get_cards
-from django.conf import settings
-from django.conf.urls.static import static
+
+from .views import card_image, get_cards, grade_photo
 
 urlpatterns = [
-    path("grade-photo/", grade_photo),
-    path("cards/", get_cards),
+    path('grade-photo/', grade_photo),
+    path('cards/', get_cards),
+    path('cards/<int:card_id>/image/', card_image),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )

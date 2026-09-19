@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from 'react'
-import { cardImageSrc, fetchCards } from './api'
+import { cardImageSrc, fetchCards, gradeCard } from './api'
+import CardUploadModal from './CardUploadModal.jsx'
 import { useAuth } from './AuthContext'
 import './Profile.css'
 
@@ -20,10 +21,14 @@ function Profile() {
   const { user, logout } = useAuth()
   const fileInputId = useId()
   const bioId = useId()
+  const cardInputId = useId()
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(DEFAULT_BIO)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [cards, setCards] = useState([])
+  const [uploadQueue, setUploadQueue] = useState([])
+  const [uploadError, setUploadError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const displayName = user?.display_name || 'Player'
   const savedPhoto = user?.profile_photo
   const photoSrc = avatarUrl || savedPhoto
@@ -62,6 +67,61 @@ function Profile() {
       }
     }
   }, [avatarUrl])
+
+  function revokeQueue(items) {
+    items.forEach((item) => URL.revokeObjectURL(item.url))
+  }
+
+  function handleCardFiles(event) {
+    const files = Array.from(event.target.files || []).filter((file) =>
+      file.type.startsWith('image/'),
+    )
+    event.target.value = ''
+    if (!files.length) {
+      return
+    }
+    setUploadError('')
+    setUploadQueue((current) => [
+      ...current,
+      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    ])
+  }
+
+  function closeUploader() {
+    setUploadQueue((current) => {
+      revokeQueue(current)
+      return []
+    })
+    setUploadError('')
+    setUploading(false)
+  }
+
+  function skipCurrentUpload() {
+    setUploadQueue((current) => {
+      if (current[0]) {
+        URL.revokeObjectURL(current[0].url)
+      }
+      return current.slice(1)
+    })
+    setUploadError('')
+  }
+
+  async function uploadCurrentCard(image, story) {
+    setUploading(true)
+    setUploadError('')
+    try {
+      await gradeCard({ image, story })
+      const data = await fetchCards()
+      if (Array.isArray(data)) {
+        setCards(data)
+      }
+      skipCurrentUpload()
+    } catch (error) {
+      setUploadError(error.message || 'Could not upload this card.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   function handlePhotoChange(event) {
     const file = event.target.files?.[0]
@@ -135,12 +195,27 @@ function Profile() {
       </section>
 
       <section className="profile-cards" aria-labelledby="profile-cards-heading">
-        <h2 id="profile-cards-heading">Cards</h2>
-        <p className="profile-cards-note">
-          {cards.length
-            ? 'Saved cards from your collection.'
-            : 'Empty slots until cards are saved on your account.'}
-        </p>
+        <div className="profile-cards-header">
+          <div>
+            <h2 id="profile-cards-heading">Cards</h2>
+            <p className="profile-cards-note">
+              {cards.length
+                ? 'Saved cards from your collection.'
+                : 'Empty slots until you upload cards.'}
+            </p>
+          </div>
+          <label className="profile-photo-button" htmlFor={cardInputId}>
+            Add cards
+          </label>
+          <input
+            id={cardInputId}
+            className="profile-photo-input"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleCardFiles}
+          />
+        </div>
         <ul className="card-grid">
           {cardSlots.map((card) => {
             const imageSrc = cardImageSrc(card.image)
@@ -161,6 +236,19 @@ function Profile() {
           })}
         </ul>
       </section>
+      {uploadQueue[0] ? (
+        <CardUploadModal
+          key={uploadQueue[0].url}
+          imageSrc={uploadQueue[0].url}
+          queueIndex={0}
+          queueTotal={uploadQueue.length}
+          submitting={uploading}
+          error={uploadError}
+          onCancel={closeUploader}
+          onSkip={skipCurrentUpload}
+          onUpload={uploadCurrentCard}
+        />
+      ) : null}
     </main>
   )
 }

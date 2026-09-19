@@ -1,23 +1,23 @@
-from django.shortcuts import render
-from .models import Card
-
-
-# Create your views here.
-
+import mimetypes
 import os
 
+from pathlib import Path
+
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
-
-from rest_framework.decorators import api_view, parser_classes
-
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-load_dotenv()
+from .models import Card
+
+load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 
 
 class PhotoScores(BaseModel):
@@ -28,23 +28,42 @@ class PhotoScores(BaseModel):
     memory_story: int = Field(ge=0, le=10)
 
 
-@api_view(["POST"])
+def card_payload(card):
+    return {
+        'id': card.id,
+        'image': f'/api/cards/{card.id}/image/',
+        'story': card.story,
+        'scores': {
+            'photo_quality': card.photo_quality,
+            'location_significance': card.location_significance,
+            'occasion': card.occasion,
+            'uniqueness': card.uniqueness,
+            'memory_story': card.memory_story,
+        },
+        'overall_score': card.overall_score,
+        'rarity': card.rarity,
+        'created_at': card.created_at,
+    }
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def grade_photo(request):
-    image = request.FILES.get("image")
-    story = request.data.get("story", "")
+    image = request.FILES.get('image')
+    story = request.data.get('story', '')
 
     if image is None:
         return Response(
-            {"error": "No image was uploaded."},
+            {'error': 'No image was uploaded.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv('GEMINI_API_KEY')
 
     if not api_key:
         return Response(
-            {"error": "GEMINI_API_KEY was not found."},
+            {'error': 'GEMINI_API_KEY was not found.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -52,6 +71,7 @@ def grade_photo(request):
         client = genai.Client(api_key=api_key)
 
         image_bytes = image.read()
+        image.seek(0)
 
         prompt = f"""
 Grade this photo for a collectible photo-card application.
@@ -83,16 +103,16 @@ User's story:
 """
 
         response = client.models.generate_content(
-            model="gemini-3.6-flash",
+            model='gemini-3.6-flash',
             contents=[
                 types.Part.from_bytes(
                     data=image_bytes,
-                    mime_type=image.content_type or "image/jpeg",
+                    mime_type=image.content_type or 'image/jpeg',
                 ),
                 prompt,
             ],
             config=types.GenerateContentConfig(
-                response_mime_type="application/json",
+                response_mime_type='application/json',
                 response_schema=PhotoScores,
             ),
         )
@@ -108,17 +128,18 @@ User's story:
         ) * 2
 
         if overall_score >= 90:
-            rarity = "Legendary"
+            rarity = 'Legendary'
         elif overall_score >= 75:
-            rarity = "Epic"
+            rarity = 'Epic'
         elif overall_score >= 60:
-            rarity = "Rare"
+            rarity = 'Rare'
         elif overall_score >= 40:
-            rarity = "Uncommon"
+            rarity = 'Uncommon'
         else:
-            rarity = "Common"
+            rarity = 'Common'
 
         card = Card.objects.create(
+            owner=request.user,
             image=image,
             story=story,
             photo_quality=scores.photo_quality,
@@ -130,48 +151,25 @@ User's story:
             rarity=rarity,
         )
 
-        return Response({
-            "id": card.id,
-            "image": card.image.url,
-            "story": card.story,
-            "scores": {
-                "photo_quality": card.photo_quality,
-                "location_significance": card.location_significance,
-                "occasion": card.occasion,
-                "uniqueness": card.uniqueness,
-                "memory_story": card.memory_story,
-            },
-            "overall_score": card.overall_score,
-            "rarity": card.rarity,
-        })
+        return Response(card_payload(card))
 
     except Exception as error:
         return Response(
-            {"error": str(error)},
+            {'error': str(error)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-@api_view(["GET"])
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_cards(request):
-    cards = Card.objects.all().order_by("-created_at")
+    cards = Card.objects.filter(owner=request.user).order_by('-created_at')
+    return Response([card_payload(card) for card in cards])
 
-    data = []
 
-    for card in cards:
-        data.append({
-            "id": card.id,
-            "image": card.image.url,
-            "story": card.story,
-            "scores": {
-                "photo_quality": card.photo_quality,
-                "location_significance": card.location_significance,
-                "occasion": card.occasion,
-                "uniqueness": card.uniqueness,
-                "memory_story": card.memory_story,
-            },
-            "overall_score": card.overall_score,
-            "rarity": card.rarity,
-            "created_at": card.created_at,
-        })
-
-    return Response(data)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def card_image(request, card_id):
+    card = get_object_or_404(Card, pk=card_id, owner=request.user)
+    content_type = mimetypes.guess_type(card.image.name)[0] or 'application/octet-stream'
+    return FileResponse(card.image.open('rb'), content_type=content_type)

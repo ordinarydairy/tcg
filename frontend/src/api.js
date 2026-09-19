@@ -8,6 +8,7 @@ function cookieCsrfToken() {
 function formatError(payload, fallback) {
   if (!payload || typeof payload !== 'object') return fallback
   if (typeof payload.detail === 'string') return payload.detail
+  if (typeof payload.error === 'string') return payload.error
   if (Array.isArray(payload.non_field_errors) && payload.non_field_errors[0]) {
     return payload.non_field_errors[0]
   }
@@ -74,6 +75,15 @@ export function logout() {
 
 export function fetchCards() {
   return request('/api/cards/')
+}
+
+export function gradeCard({ image, story }) {
+  const body = new FormData()
+  body.append('image', image)
+  if (story) {
+    body.append('story', story)
+  }
+  return request('/api/grade-photo/', { method: 'POST', body })
 }
 
 export function cardImageSrc(image) {
