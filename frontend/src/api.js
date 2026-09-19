@@ -105,6 +105,8 @@ export function cardImageSrc(image) {
     }
   }
   return image
+}
+
 export function fetchFriends() {
   return request('/api/friends/')
 }

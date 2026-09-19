@@ -19,14 +19,11 @@ function GearIcon() {
 
 function Profile() {
   const { user, logout, updateProfile } = useAuth()
+  const { userId } = useParams()
+  const navigate = useNavigate()
   const fileInputId = useId()
   const bioId = useId()
   const cardInputId = useId()
-  const { userId } = useParams()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const fileInputId = useId()
-  const bioId = useId()
   const isOwn = !userId || String(user?.id) === String(userId)
   const [remotePlayer, setRemotePlayer] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
@@ -39,18 +36,15 @@ function Profile() {
   const [uploadError, setUploadError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [selectedCard, setSelectedCard] = useState(null)
-  const displayName = user?.display_name || 'Player'
-  const savedPhoto = user?.profile_photo
-  const photoSrc = avatarUrl || savedPhoto
-  const cardSlots = [
-    ...cards,
-    ...Array.from(
-      { length: Math.max(0, SLOT_COUNT - cards.length) },
-      (_, index) => ({ id: `empty-${index}` }),
-    ),
-  ]
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
+    if (!isOwn) {
+      setCards([])
+      return undefined
+    }
     let cancelled = false
     async function loadCards() {
       try {
@@ -68,14 +62,11 @@ function Profile() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isOwn])
 
   useEffect(() => {
     setBio(user?.bio || '')
   }, [user?.bio])
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
     if (isOwn) {
@@ -227,6 +218,13 @@ function Profile() {
   const photoSrc = isOwn ? avatarUrl || savedPhoto : savedPhoto
   const actionLabel =
     player?.friendship_status === 'friends' ? 'Remove friend' : friendshipActionLabel(player?.friendship_status)
+  const cardSlots = [
+    ...cards,
+    ...Array.from(
+      { length: Math.max(0, SLOT_COUNT - cards.length) },
+      (_, index) => ({ id: `empty-${index}` }),
+    ),
+  ]
 
   return (
     <main className="profile">
@@ -270,38 +268,8 @@ function Profile() {
           )}
         </div>
         <h1 className="profile-name">{displayName}</h1>
-        <label className="profile-photo-button" htmlFor={fileInputId}>
-          Change photo
-        </label>
-        <input
-          id={fileInputId}
-          className="profile-photo-input"
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoChange}
-        />
-        <label className="profile-bio-label" htmlFor={bioId}>
-          Bio
-        </label>
-        <textarea
-          id={bioId}
-          className="profile-bio"
-          rows={3}
-          maxLength={500}
-          value={bio}
-          onChange={(event) => {
-            setBio(event.target.value)
-            setBioStatus('')
-          }}
-          onKeyDown={handleBioKeyDown}
-          placeholder="Write a short bio. Press Enter to save."
-        />
-        <p className="profile-bio-hint">
-          {savingBio ? 'Saving…' : bioStatus || 'Press Enter to save. Shift+Enter adds a new line.'}
-        </p>
         {isOwn ? (
           <>
-            {user?.email ? <p className="profile-email">{user.email}</p> : null}
             <label className="profile-photo-button" htmlFor={fileInputId}>
               Change photo
             </label>
@@ -319,9 +287,18 @@ function Profile() {
               id={bioId}
               className="profile-bio"
               rows={3}
+              maxLength={500}
               value={bio}
-              onChange={(event) => setBio(event.target.value)}
+              onChange={(event) => {
+                setBio(event.target.value)
+                setBioStatus('')
+              }}
+              onKeyDown={handleBioKeyDown}
+              placeholder="Write a short bio. Press Enter to save."
             />
+            <p className="profile-bio-hint">
+              {savingBio ? 'Saving…' : bioStatus || 'Press Enter to save. Shift+Enter adds a new line.'}
+            </p>
           </>
         ) : (
           <>
@@ -350,9 +327,11 @@ function Profile() {
                 : 'Empty slots until you upload cards.'}
             </p>
           </div>
-          <label className="profile-photo-button" htmlFor={cardInputId}>
-            Add cards
-          </label>
+          {isOwn ? (
+            <label className="profile-photo-button" htmlFor={cardInputId}>
+              Add cards
+            </label>
+          ) : null}
           <input
             id={cardInputId}
             className="profile-photo-input"
