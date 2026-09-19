@@ -9,12 +9,21 @@ const BLANK_CARDS = Array.from({ length: 10 }, (_, index) => ({
 const DEFAULT_BIO =
   'This is a placeholder bio. You can edit it here; it is not saved yet.'
 
+function GearIcon() {
+  return (
+    <svg className="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M11.3 2.7h1.4l.3 2.2a6.8 6.8 0 0 1 1.7.7l2-1.1 1 1-1.1 2a6.8 6.8 0 0 1 .7 1.7l2.2.3v1.4l-2.2.3a6.8 6.8 0 0 1-.7 1.7l1.1 2-1 1-2-1.1a6.8 6.8 0 0 1-1.7.7l-.3 2.2h-1.4l-.3-2.2a6.8 6.8 0 0 1-1.7-.7l-2 1.1-1-1 1.1-2a6.8 6.8 0 0 1-.7-1.7l-2.2-.3v-1.4l2.2-.3a6.8 6.8 0 0 1 .7-1.7l-1.1-2 1-1 2 1.1a6.8 6.8 0 0 1 1.7-.7l.3-2.2ZM12 9.2A2.8 2.8 0 1 0 12 14.8 2.8 2.8 0 0 0 12 9.2Z" />
+    </svg>
+  )
+}
+
 function Profile() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const fileInputId = useId()
   const bioId = useId()
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(DEFAULT_BIO)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const displayName = user?.display_name || 'Player'
   const savedPhoto = user?.profile_photo
   const photoSrc = avatarUrl || savedPhoto
@@ -44,6 +53,27 @@ function Profile() {
 
   return (
     <main className="profile">
+      <header className="profile-toolbar">
+        <button
+          type="button"
+          className="settings-gear"
+          aria-label="Settings"
+          aria-expanded={settingsOpen}
+          onClick={() => setSettingsOpen((open) => !open)}
+        >
+          <GearIcon />
+        </button>
+        {settingsOpen ? (
+          <div className="settings-panel" role="dialog" aria-label="Account settings">
+            <p className="settings-heading">Account</p>
+            {user?.email ? <p className="settings-email">{user.email}</p> : null}
+            <button type="button" className="ghost" onClick={() => logout()}>
+              Sign out
+            </button>
+          </div>
+        ) : null}
+      </header>
+
       <section className="profile-identity">
         <div className="profile-avatar">
           {photoSrc ? (
@@ -55,7 +85,6 @@ function Profile() {
           )}
         </div>
         <h1 className="profile-name">{displayName}</h1>
-        {user?.email ? <p className="profile-email">{user.email}</p> : null}
         <label className="profile-photo-button" htmlFor={fileInputId}>
           Change photo
         </label>
