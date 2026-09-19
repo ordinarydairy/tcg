@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
+from .models import Friendship, User
 
 
 @admin.register(User)
@@ -22,3 +22,9 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
     filter_horizontal = ('groups', 'user_permissions')
+
+
+@admin.register(Friendship)
+class FriendshipAdmin(admin.ModelAdmin):
+    list_display = ('from_user', 'to_user', 'status', 'created_at')
+    list_filter = ('status',)
