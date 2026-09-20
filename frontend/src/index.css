@@ -14,6 +14,11 @@
   --pink-strong: #f3a9c6;
   --lime: #d8f07a;
   --lime-strong: #c6e64a;
+  --rarity-common: #b1bcd6;
+  --rarity-uncommon: #55dba8;
+  --rarity-rare: #5eb6ff;
+  --rarity-epic: #8c88fc;
+  --rarity-legendary: #f7d48a;
   --social-bg: rgba(255, 255, 255, 0.78);
   --shadow: 0 12px 28px rgba(77, 125, 255, 0.12);
   --shadow-btn: 4px 4px 0 #8eb6e8;
@@ -34,13 +39,119 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes legendary-holo-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes legendary-holo-sheen {
+  0% {
+    transform: translateX(-140%) rotate(18deg);
+  }
+  100% {
+    transform: translateX(140%) rotate(18deg);
+  }
+}
+
+/* Shared holographic treatment for Legendary cards */
+.blank-card[data-rarity='Legendary'],
+.card-face[data-rarity='Legendary'],
+.trade-card[data-rarity='Legendary'],
+.pack-reveal-card[data-rarity='Legendary'] {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(#1b3558, #1b3558) padding-box,
+    linear-gradient(
+      120deg,
+      #f7d48a,
+      #fff6c8,
+      #7cf0ff,
+      #c9a0ff,
+      #ff9ad5,
+      #f7d48a
+    )
+    border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: auto, 280% 280%;
+  animation: legendary-holo-shift 5s ease infinite;
+  box-shadow:
+    0 0 0 1px rgba(247, 212, 138, 0.35),
+    0 8px 22px rgba(247, 212, 138, 0.28),
+    0 0 28px rgba(124, 240, 255, 0.18);
+}
+
+.blank-card[data-rarity='Legendary']::after,
+.card-face[data-rarity='Legendary']::after,
+.trade-card[data-rarity='Legendary']::after,
+.pack-reveal-card[data-rarity='Legendary']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 255, 255, 0.45) 48%,
+    rgba(124, 240, 255, 0.28) 52%,
+    rgba(201, 160, 255, 0.2) 58%,
+    transparent 72%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.85;
+  animation: legendary-holo-sheen 3.6s ease-in-out infinite;
+}
+
+.card-face[data-rarity='Legendary'].card-back,
+.card-face[data-rarity='Legendary'].card-front {
+  background:
+    linear-gradient(#29292d, #29292d) padding-box,
+    linear-gradient(
+      120deg,
+      #f7d48a,
+      #fff6c8,
+      #7cf0ff,
+      #c9a0ff,
+      #ff9ad5,
+      #f7d48a
+    )
+    border-box;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: auto, 280% 280%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blank-card[data-rarity='Legendary'],
+  .card-face[data-rarity='Legendary'],
+  .trade-card[data-rarity='Legendary'],
+  .pack-reveal-card[data-rarity='Legendary'],
+  .blank-card[data-rarity='Legendary']::after,
+  .card-face[data-rarity='Legendary']::after,
+  .trade-card[data-rarity='Legendary']::after,
+  .pack-reveal-card[data-rarity='Legendary']::after {
+    animation: none;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: hidden;
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.7) 0 18px, transparent 19px),
     radial-gradient(circle at 88% 14%, rgba(125, 186, 255, 0.45) 0 28px, transparent 29px),
@@ -50,7 +161,9 @@ body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 
 h1,

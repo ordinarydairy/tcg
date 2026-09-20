@@ -85,7 +85,6 @@ export default function AuthScreen() {
     <main className="auth-page">
       <div className="auth-card">
         <img className="auth-logo" src={logo} alt="TCG" width="512" height="512" />
-        <p className="eyebrow">TCG</p>
         <h1>{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
         <p className="lede">
           {mode === 'signin'

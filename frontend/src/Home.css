@@ -1,5 +1,5 @@
 .home-page {
-  min-height: calc(100svh - 88px);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,18 +12,20 @@
 
 .pack-credits {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
+  top: -6px;
+  right: -6px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
   border-radius: 999px;
   background: #e56a2a;
   color: #fff;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   display: grid;
   place-items: center;
   z-index: 2;
+  box-shadow: 0 0 0 2px #ffffff;
 }
 
 .mystery-pack,
@@ -176,9 +178,29 @@
   padding: 0;
   overflow: hidden;
   isolation: isolate;
-  border: 3px solid var(--accent);
+  border: 3px solid var(--rarity-common);
   border-radius: 18px;
   background: #1b3558;
+}
+
+.home-page .blank-card[data-rarity='Common'] {
+  border-color: var(--rarity-common);
+}
+
+.home-page .blank-card[data-rarity='Uncommon'] {
+  border-color: var(--rarity-uncommon);
+}
+
+.home-page .blank-card[data-rarity='Rare'] {
+  border-color: var(--rarity-rare);
+}
+
+.home-page .blank-card[data-rarity='Epic'] {
+  border-color: var(--rarity-epic);
+}
+
+.home-page .blank-card[data-rarity='Legendary'] {
+  border-color: var(--rarity-legendary);
 }
 
 .home-page .blank-card-art {
@@ -206,6 +228,7 @@
   font-size: 12px;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  z-index: 5;
 }
 
 .pack-count {
@@ -266,7 +289,7 @@
 .pack-reveal-card {
   width: min(240px, 72vw);
   aspect-ratio: 2 / 3;
-  border: 3px solid #77777f;
+  border: 3px solid var(--rarity-common);
   border-radius: 16px;
   overflow: hidden;
   background: #25252a;
@@ -274,6 +297,26 @@
   transform: scale(0.01);
   animation: pack-grow 0.7s ease-out forwards;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.pack-reveal-card[data-rarity='Common'] {
+  border-color: var(--rarity-common);
+}
+
+.pack-reveal-card[data-rarity='Uncommon'] {
+  border-color: var(--rarity-uncommon);
+}
+
+.pack-reveal-card[data-rarity='Rare'] {
+  border-color: var(--rarity-rare);
+}
+
+.pack-reveal-card[data-rarity='Epic'] {
+  border-color: var(--rarity-epic);
+}
+
+.pack-reveal-card[data-rarity='Legendary'] {
+  border-color: var(--rarity-legendary);
 }
 
 .pack-reveal-card img {
@@ -291,6 +334,7 @@
   color: #fff;
   font-size: 14px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  z-index: 5;
 }
 
 @keyframes pack-grow {

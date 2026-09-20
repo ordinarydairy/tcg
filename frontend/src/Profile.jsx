@@ -14,7 +14,7 @@ function ProfileCardTile({ card, onOpen }) {
   const imageSrc = cardImageSrc(card.image)
   const isSaved = Boolean(imageSrc)
   return (
-    <li className={`blank-card${isSaved ? '' : ' is-empty'}`}>
+    <li className={`blank-card${isSaved ? '' : ' is-empty'}`} data-rarity={card.rarity || undefined}>
       {isSaved ? (
         <button
           type="button"
@@ -137,7 +137,11 @@ function Profile() {
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
-  const player = isOwn ? user : remotePlayer
+  const player = isOwn
+    ? user
+      ? { ...user, friend_count: remotePlayer?.friend_count ?? user.friend_count ?? 0 }
+      : null
+    : remotePlayer
 
   useEffect(() => {
     const ownerId = isOwn ? user?.id : userId
@@ -175,21 +179,22 @@ function Profile() {
   }, [user?.bio])
 
   useEffect(() => {
-    if (isOwn) {
+    const ownerId = isOwn ? user?.id : userId
+    if (!ownerId) {
       return undefined
     }
     let cancelled = false
-    fetchPlayer(userId)
+    fetchPlayer(ownerId)
       .then((data) => {
         if (!cancelled) setRemotePlayer(data)
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message)
+        if (!cancelled && !isOwn) setError(err.message)
       })
     return () => {
       cancelled = true
     }
-  }, [isOwn, userId])
+  }, [isOwn, userId, user?.id])
 
   useEffect(() => {
     setPhotoFailed(false)
@@ -431,6 +436,10 @@ function Profile() {
           <h1 className="profile-name">{displayName}</h1>
         )}
         {player?.tag ? <p className="profile-tag">#{player.tag}</p> : null}
+        <p className="profile-friend-count">
+          {Number(player?.friend_count) || 0}{' '}
+          {(Number(player?.friend_count) || 0) === 1 ? 'friend' : 'friends'}
+        </p>
         {isOwn ? (
           editing ? (
             <>
@@ -560,7 +569,7 @@ function Profile() {
               <div className="card-flip-inner">
 
                 {/* FRONT */}
-                <div className={`card-face card-front ${cardTextTone}`}>
+                <div className={`card-face card-front ${cardTextTone}`} data-rarity={selectedCard.rarity}>
                   <img
                     src={cardImageSrc(selectedCard.image)}
                     alt=""
@@ -582,7 +591,7 @@ function Profile() {
 
 
                 {/* BACK */}
-                <div className={`card-face card-back ${cardTextTone}`}>
+                <div className={`card-face card-back ${cardTextTone}`} data-rarity={selectedCard.rarity}>
                   <img
                     src={cardImageSrc(selectedCard.image)}
                     alt=""
