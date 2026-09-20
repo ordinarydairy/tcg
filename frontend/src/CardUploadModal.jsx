@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import Cropper from 'react-easy-crop'
 import { cropImageToFile, loadImage, paintCropPreview } from './cardCrop'
 
-const CARD_ASPECT = 2 / 3
+const CARD_ASPECT = 2/3
 
 export default function CardUploadModal({
   imageSrc,
@@ -105,11 +105,27 @@ export default function CardUploadModal({
 
           <aside className="card-crop-preview" aria-label="Card preview">
             <p className="card-crop-preview-label">Card preview</p>
+
             <div className="blank-card card-preview-card">
-              <div className="blank-card-art">
-                <canvas ref={previewRef} />
+              <div className="card-full-art">
+
+                <canvas
+                  ref={previewRef}
+                  className="card-full-image"
+                />
+
+                <div className="card-top-info">
+                  <h3 className="card-title">Photo Card</h3>
+                  <p className="card-rarity">Preview</p>
+                </div>
+
+                <div className="card-description-box">
+                  <p className="card-description">
+                    {story || 'Your description will appear here.'}
+                  </p>
+                </div>
+
               </div>
-              <p className="blank-card-rarity">Preview</p>
             </div>
           </aside>
         </div>

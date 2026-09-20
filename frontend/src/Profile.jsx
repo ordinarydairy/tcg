@@ -11,16 +11,29 @@ const SLOT_COUNT = 10
 
 function ProfileCardTile({ card, onOpen }) {
   const imageSrc = cardImageSrc(card.image)
-  const [failed, setFailed] = useState(false)
   const isSaved = Boolean(imageSrc)
   return (
     <li className="blank-card">
       {isSaved ? (
-        <button type="button" className="blank-card-button" onClick={() => onOpen(card)}>
-          <div className="blank-card-art">
-            {failed ? null : <img src={imageSrc} alt="" onError={() => setFailed(true)} />}
+        <button
+          type="button"
+          className="blank-card-button"
+          onClick={() => onOpen(card)}
+        >
+          <img
+            src={imageSrc}
+            alt=""
+            className="card-full-image"
+          />
+
+          <div className="card-rarity-stars" aria-label={card.rarity}>
+            {Array.from(
+              { length: rarityStars(card.rarity).length },
+              (_, index) => (
+                <span key={index}>★</span>
+              )
+            )}
           </div>
-          <p className="blank-card-rarity">{card.rarity}</p>
         </button>
       ) : (
         <>
@@ -39,6 +52,61 @@ function GearIcon() {
     </svg>
   )
 }
+
+
+function getImageTextColor(imageSrc) {
+  return new Promise((resolve) => {
+    const image = new Image()
+    image.crossOrigin = 'anonymous'
+
+    image.onload = () => {
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+
+      canvas.width = 20
+      canvas.height = 20
+
+      context.drawImage(image, 0, 0, 20, 20)
+
+      try {
+        const data = context.getImageData(0, 0, 20, 20).data
+
+        let brightness = 0
+
+        for (let i = 0; i < data.length; i += 4) {
+          brightness +=
+            data[i] * 0.299 +
+            data[i + 1] * 0.587 +
+            data[i + 2] * 0.114
+        }
+
+        brightness /= data.length / 4
+
+        resolve(brightness < 125 ? 'light' : 'dark')
+      } catch {
+        resolve('light')
+      }
+    }
+
+    image.onerror = () => resolve('light')
+    image.src = imageSrc
+  })
+}
+
+function rarityStars(rarity) {
+  const stars = {
+    Common: 1,
+    Uncommon: 2,
+    Rare: 3,
+    Epic: 4,
+    Legendary: 5,
+  }
+
+  return '★'.repeat(stars[rarity] || 1)
+}
+
+
+
 
 function Profile() {
   const { user, logout, updateProfile } = useAuth()
@@ -59,6 +127,8 @@ function Profile() {
   const [uploadError, setUploadError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [selectedCard, setSelectedCard] = useState(null)
+  const [cardFlipped, setCardFlipped] = useState(false)
+  const [cardTextTone, setCardTextTone] = useState('light')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
@@ -122,6 +192,16 @@ function Profile() {
       }
     }
   }, [avatarUrl])
+
+  useEffect(() => {
+  if (!selectedCard) return
+
+  const imageSrc = cardImageSrc(selectedCard.image)
+
+  getImageTextColor(imageSrc).then((tone) => {
+    setCardTextTone(tone)
+  })
+  }, [selectedCard])
 
   function revokeQueue(items) {
     items.forEach((item) => URL.revokeObjectURL(item.url))
@@ -404,36 +484,110 @@ function Profile() {
         </ul>
       </section>
       {selectedCard ? (
-        <div className="card-upload-backdrop" role="presentation" onClick={() => setSelectedCard(null)}>
+        <div
+          className="card-upload-backdrop"
+          role="presentation"
+          onClick={() => {
+            setSelectedCard(null)
+            setCardFlipped(false)
+          }}
+        >
           <div
-            className="card-story-dialog"
+            className="card-flip-dialog"
             role="dialog"
-            aria-labelledby="card-story-title"
             aria-modal="true"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="card-story-art">
-              <img
-                src={cardImageSrc(selectedCard.image)}
-                alt={selectedCard.rarity || 'Saved card'}
-              />
+
+            <div
+              className={`card-flip ${cardFlipped ? 'is-flipped' : ''}`}
+              onClick={() => setCardFlipped((flipped) => !flipped)}
+            >
+              <div className="card-flip-inner">
+
+                {/* FRONT */}
+                <div className={`card-face card-front ${cardTextTone}`}>
+                  <img
+                    src={cardImageSrc(selectedCard.image)}
+                    alt=""
+                    className="card-full-image"
+                  />
+
+                  <div
+                    className="card-rarity-stars"
+                    aria-label={selectedCard.rarity}
+                  >
+                    {Array.from(
+                      { length: rarityStars(selectedCard.rarity).length },
+                      (_, index) => (
+                        <span key={index}>★</span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+
+                {/* BACK */}
+                <div className={`card-face card-back ${cardTextTone}`}>
+                  <img
+                    src={cardImageSrc(selectedCard.image)}
+                    alt=""
+                    className="card-back-image"
+                  />
+
+                  <div className="card-back-overlay" />
+
+                  <div className="card-back-content">
+
+                    <div className="card-back-info">
+                      <p className="card-back-rarity">
+                        {selectedCard.rarity}
+                      </p>
+
+                      <p className="card-back-username">
+                        @{user?.display_name || user?.username || 'user'}
+                      </p>
+
+                      {selectedCard.story?.trim() ? (
+                        <p className="card-back-description">
+                          {selectedCard.story}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div
+                      className="card-rarity-stars"
+                      aria-label={selectedCard.rarity}
+                    >
+                      {Array.from(
+                        { length: rarityStars(selectedCard.rarity).length },
+                        (_, index) => (
+                          <span key={index}>★</span>
+                        )
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
             </div>
-            <div className="card-story-copy">
-              <p className="card-story-kicker">{selectedCard.rarity}</p>
-              <h2 id="card-story-title">
-                {selectedCard.overall_score != null
-                  ? `${selectedCard.overall_score}/100`
-                  : 'Card'}
-              </h2>
-              <p className="card-story-text">
-                {selectedCard.story?.trim()
-                  ? selectedCard.story
-                  : 'No story was added for this card.'}
-              </p>
-              <button type="button" className="ghost" onClick={() => setSelectedCard(null)}>
-                Close
-              </button>
-            </div>
+
+            <p className="card-flip-hint">
+              Click card to flip
+            </p>
+
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                setSelectedCard(null)
+                setCardFlipped(false)
+              }}
+            >
+              Close
+            </button>
+
           </div>
         </div>
       ) : null}
