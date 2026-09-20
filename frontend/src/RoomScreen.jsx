@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from './AuthContext'
+import { createRoom as createRoomApi, joinRoom as joinRoomApi } from './api'
 import './Rooms.css'
 
 export default function RoomScreen() {
@@ -9,22 +10,46 @@ export default function RoomScreen() {
   const [activeRoom, setActiveRoom] = useState(null)
   const [joinCode, setJoinCode] = useState('')
 
-  function createRoom() {
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    let code = ''
+  async function createRoom() {
+    try {
+      const room = await createRoomApi()
 
-    for (let i = 0; i < 6; i += 1) {
-      code += characters[Math.floor(Math.random() * characters.length)]
+      setRoomCode(room.code)
+
+      setActiveRoom({
+        code: room.code,
+        isHost: room.is_host,
+        host: room.host,
+        members: room.members,
+      })
+    } catch (error) {
+      console.error('Create room failed:', error)
+    }
+  }
+
+  async function joinRoom() {
+    const code = joinCode.trim().toUpperCase()
+
+    if (!code) {
+      return
     }
 
-    setRoomCode(code)
+    try {
+      const room = await joinRoomApi(code)
 
-    setActiveRoom({
-      code,
-      isHost: true,
-      members: [],
-    })
+      setRoomCode(room.code)
+
+      setActiveRoom({
+        code: room.code,
+        isHost: room.is_host,
+        host: room.host,
+        members: room.members,
+      })
+    } catch (error) {
+      console.error('Join room failed:', error)
+    }
   }
+
 
   function leaveRoom() {
     setActiveRoom(null)
@@ -184,6 +209,7 @@ export default function RoomScreen() {
             <button
               type="button"
               className="room-join-button"
+              onClick={joinRoom}
             >
               Join Room
             </button>

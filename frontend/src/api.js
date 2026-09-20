@@ -183,3 +183,16 @@ export function acceptTrade(tradeId) {
 export function cancelTrade(tradeId) {
   return request(`/api/trades/${tradeId}/cancel/`, { method: 'POST' })
 }
+
+export function createRoom() {
+  return request('/api/rooms/', {
+    method: 'POST',
+  })
+}
+
+export function joinRoom(code) {
+  return request('/api/rooms/join/', {
+    method: 'POST',
+    body: { code },
+  })
+}
