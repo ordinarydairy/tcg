@@ -1,3 +1,4 @@
+from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -102,6 +103,25 @@ class AuthApiTests(TestCase):
         self.assertEqual(response.json()['user']['bio'], 'Collector of rare cards.')
         user.refresh_from_db()
         self.assertEqual(user.bio, 'Collector of rare cards.')
+
+    def test_owner_can_change_profile_photo(self):
+        user = User.objects.create_user(
+            email='player@example.com',
+            password='secretpass123',
+            display_name='Claire',
+            profile_photo=png_file('old.png'),
+        )
+        client = APIClient()
+        client.force_login(user)
+        response = client.patch(
+            reverse('me'),
+            {'profile_photo': png_file('new.png')},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['user']['profile_photo'])
+        user.refresh_from_db()
+        self.assertIn('profiles/', user.profile_photo.name)
 
     def test_anonymous_cannot_save_bio(self):
         response = self.client.patch(
