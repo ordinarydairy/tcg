@@ -64,8 +64,18 @@
   padding: 6px 10px;
 }
 
-.friends-empty {
+.friends-empty,
+.friends-loading,
+.cards-loading {
   color: var(--text);
+}
+
+.friends-loading,
+.cards-loading {
+  margin: 0;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
 }
 
 .player-list {
@@ -103,7 +113,7 @@
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--lime);
+  border: 2px solid var(--border);
 }
 
 .player-avatar.fallback {
@@ -138,4 +148,16 @@
   flex: 0 0 auto;
   padding: 8px 12px;
   white-space: nowrap;
+}
+
+.ghost.player-action-completed {
+  background: #4d7dff;
+  color: #fff;
+  box-shadow: 4px 4px 0 #2f5ad1;
+}
+
+.ghost.player-action-cancelled {
+  background: #ef5b5b;
+  color: #fff;
+  box-shadow: 4px 4px 0 #c43d3d;
 }

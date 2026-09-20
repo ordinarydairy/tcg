@@ -21,7 +21,8 @@ function PlayerAvatar({ player }) {
   )
 }
 
-export default function PlayerRow({ player, actionLabel, actionBusy, onAction }) {
+export default function PlayerRow({ player, actionLabel, actionBusy, actionTone, onAction }) {
+  const toneClass = actionTone ? ` player-action-${actionTone}` : ''
   return (
     <li className="player-row">
       <Link className="player-identity" to={`/users/${player.id}`}>
@@ -34,7 +35,7 @@ export default function PlayerRow({ player, actionLabel, actionBusy, onAction })
       {actionLabel ? (
         <button
           type="button"
-          className="ghost player-action"
+          className={`ghost player-action${toneClass}`}
           disabled={actionBusy || actionLabel === 'Requested'}
           onClick={() => onAction?.(player)}
         >

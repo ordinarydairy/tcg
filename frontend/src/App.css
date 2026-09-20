@@ -66,8 +66,9 @@
 .mode-toggle button,
 .ghost {
   color: var(--text-h);
-  background: var(--card);
-  border: 2px solid var(--border);
+  background: var(--lime);
+  border: 0;
+  box-shadow: var(--shadow-btn);
   padding: 10px 12px;
 }
 
@@ -75,7 +76,8 @@
 .primary {
   color: #fff;
   background: var(--accent);
-  border: 2px solid transparent;
+  border: 0;
+  box-shadow: var(--shadow-btn);
 }
 
 .primary,
@@ -201,7 +203,7 @@ input[type='file'] {
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--lime);
+  border: 3px solid var(--border);
 }
 
 .avatar.fallback {

@@ -28,9 +28,15 @@
   margin: 12px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 110px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: start;
   gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .trade-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 110px));
+  }
 }
 
 .trade-card {
