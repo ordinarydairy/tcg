@@ -3,6 +3,7 @@ import { cardImageSrc, fetchCards, gradeCard } from './api'
 import CardCameraCapture from './CardCameraCapture.jsx'
 import CardSourcePicker from './CardSourcePicker.jsx'
 import CardUploadModal from './CardUploadModal.jsx'
+import PhotoCropModal from './PhotoCropModal.jsx'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { fetchPlayer, removeFriend, sendFriendRequest } from './api'
@@ -139,6 +140,8 @@ function Profile() {
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
   const [photoStatus, setPhotoStatus] = useState('')
+  const [photoCropSrc, setPhotoCropSrc] = useState('')
+  const [savingPhoto, setSavingPhoto] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
@@ -313,9 +316,36 @@ function Profile() {
     if (!file) {
       return
     }
+    if (!file.type.startsWith('image/')) {
+      setPhotoStatus('Please choose an image for your profile photo.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoStatus('Profile photo must be 5MB or smaller.')
+      return
+    }
+    setPhotoStatus('')
+    setPhotoCropSrc((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous)
+      }
+      return URL.createObjectURL(file)
+    })
+  }
 
+  function cancelPhotoCrop() {
+    setPhotoCropSrc((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous)
+      }
+      return ''
+    })
+  }
+
+  async function saveCroppedPhoto(file) {
     const nextUrl = URL.createObjectURL(file)
     setPhotoFailed(false)
+    setSavingPhoto(true)
     setPhotoStatus('Saving photo…')
     setAvatarUrl((previousUrl) => {
       if (previousUrl) {
@@ -334,8 +364,11 @@ function Profile() {
         }
         return null
       })
+      cancelPhotoCrop()
     } catch (error) {
       setPhotoStatus(error.message || 'Could not save photo.')
+    } finally {
+      setSavingPhoto(false)
     }
   }
 
@@ -796,6 +829,14 @@ function Profile() {
           onCancel={closeUploader}
           onSkip={skipCurrentUpload}
           onUpload={uploadCurrentCard}
+        />
+      ) : null}
+      {photoCropSrc ? (
+        <PhotoCropModal
+          imageSrc={photoCropSrc}
+          busy={savingPhoto}
+          onCancel={cancelPhotoCrop}
+          onConfirm={saveCroppedPhoto}
         />
       ) : null}
     </main>

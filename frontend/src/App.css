@@ -27,6 +27,14 @@
   box-shadow: var(--shadow);
 }
 
+.auth-logo {
+  display: block;
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 16px;
+  object-fit: contain;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   text-transform: uppercase;

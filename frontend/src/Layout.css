@@ -141,6 +141,10 @@
   fill: currentColor;
 }
 
+.tab-logo {
+  object-fit: contain;
+}
+
 .tab-icon-wrap {
   position: relative;
   display: grid;
