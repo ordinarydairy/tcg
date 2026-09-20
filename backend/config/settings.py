@@ -27,12 +27,23 @@ load_dotenv(BASE_DIR / '.env', override=True)
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e7!28)z8_p0ab$0x6_%7y3i2$r+iisa)r@w37kv9d879h@z(*f'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-e7!28)z8_p0ab$0x6_%7y3i2$r+iisa)r@w37kv9d879h@z(*f',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() in {'1', 'true', 'yes'}
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+def env_list(name, default=''):
+    return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
+
+
+ALLOWED_HOSTS = env_list(
+    'ALLOWED_HOSTS',
+    'localhost,127.0.0.1,.netlify.app,.railway.app,.up.railway.app',
+)
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -200,11 +211,19 @@ _DEV_ORIGINS = [
     for host in ('localhost', '127.0.0.1')
     for port in (5173, 5174, 5175, 5176)
 ]
-CORS_ALLOWED_ORIGINS = _DEV_ORIGINS
+_PROD_ORIGINS = env_list(
+    'FRONTEND_ORIGINS',
+    'https://tableau-tcg.netlify.app,https://claire-tcg.netlify.app,https://*.netlify.app',
+)
+CORS_ALLOWED_ORIGINS = [origin for origin in _DEV_ORIGINS + _PROD_ORIGINS if '*' not in origin]
+CORS_ALLOWED_ORIGIN_REGEXES = [r'^https://[a-z0-9.-]+\.netlify\.app$']
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = _DEV_ORIGINS
+CSRF_TRUSTED_ORIGINS = _DEV_ORIGINS + _PROD_ORIGINS
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Email

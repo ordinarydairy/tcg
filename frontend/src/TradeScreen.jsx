@@ -27,7 +27,10 @@ function rarityStars(rarity) {
 function TradeCard({ card, selected, disabled, onToggle }) {
   const imageSrc = cardImageSrc(card.image)
   return (
-    <li className={`trade-card ${selected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}`}>
+    <li
+      className={`trade-card ${selected ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}`}
+      data-rarity={card.rarity}
+    >
       <button
         type="button"
         className="blank-card-button"

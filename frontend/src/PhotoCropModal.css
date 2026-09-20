@@ -53,7 +53,27 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
   justify-content: flex-end;
+}
+
+.card-upload-actions .card-upload-cancel {
+  margin-right: auto;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #8a8f98;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.card-upload-actions .card-upload-cancel:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .card-upload-submit {

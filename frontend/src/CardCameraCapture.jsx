@@ -1,5 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 
+/** Same ratio as CardUploadModal crop (portrait card). */
+const CARD_ASPECT = 2 / 3
+
+function frameSourceRect(videoWidth, videoHeight, aspect) {
+  const videoAspect = videoWidth / videoHeight
+  if (videoAspect > aspect) {
+    const width = videoHeight * aspect
+    return {
+      sx: (videoWidth - width) / 2,
+      sy: 0,
+      sw: width,
+      sh: videoHeight,
+    }
+  }
+  const height = videoWidth / aspect
+  return {
+    sx: 0,
+    sy: (videoHeight - height) / 2,
+    sw: videoWidth,
+    sh: height,
+  }
+}
+
 export default function CardCameraCapture({ onCapture, onCancel }) {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
@@ -10,7 +33,10 @@ export default function CardCameraCapture({ onCapture, onCancel }) {
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
+          video: {
+            facingMode: { ideal: 'environment' },
+            aspectRatio: { ideal: CARD_ASPECT },
+          },
           audio: false,
         })
         if (cancelled) {
@@ -39,12 +65,13 @@ export default function CardCameraCapture({ onCapture, onCancel }) {
     if (!video || !video.videoWidth) {
       return
     }
+    const { sx, sy, sw, sh } = frameSourceRect(video.videoWidth, video.videoHeight, CARD_ASPECT)
     const maxSide = 1600
-    const scale = Math.min(1, maxSide / Math.max(video.videoWidth, video.videoHeight))
+    const scale = Math.min(1, maxSide / Math.max(sw, sh))
     const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(video.videoWidth * scale))
-    canvas.height = Math.max(1, Math.round(video.videoHeight * scale))
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.width = Math.max(1, Math.round(sw * scale))
+    canvas.height = Math.max(1, Math.round(sh * scale))
+    canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8))
     if (!blob) {
       setError('Could not capture this photo.')
@@ -65,7 +92,9 @@ export default function CardCameraCapture({ onCapture, onCancel }) {
       >
         <h2 id="card-camera-title">Take a photo</h2>
         <p className="card-upload-note">Frame the picture, then capture. You can crop it next.</p>
-        <video ref={videoRef} className="card-camera-video" autoPlay playsInline muted />
+        <div className="card-camera-viewfinder">
+          <video ref={videoRef} className="card-camera-video" autoPlay playsInline muted />
+        </div>
         {error ? <p className="form-error">{error}</p> : null}
         <div className="card-upload-actions">
           <button type="button" className="ghost" onClick={onCancel}>
