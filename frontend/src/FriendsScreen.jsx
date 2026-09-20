@@ -155,9 +155,16 @@ export default function FriendsScreen() {
 
       {tradeHistory.length ? (
         <section className="friends-section">
-          <h2>Recent trades</h2>
+          <div className="friends-section-heading">
+            <h2>Recent trades</h2>
+            {tradeHistory.length > 3 ? (
+              <button type="button" className="ghost friends-see-all" onClick={() => navigate('/trades/history')}>
+                See all
+              </button>
+            ) : null}
+          </div>
           <ul className="player-list">
-            {tradeHistory.map((item) => (
+            {tradeHistory.slice(0, 3).map((item) => (
               <PlayerRow
                 key={item.id}
                 player={item.partner}
