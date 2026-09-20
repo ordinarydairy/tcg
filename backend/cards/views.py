@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import random
 from datetime import timedelta
 from pathlib import Path
 
@@ -18,13 +19,14 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from accounts.friends import accepted_friend_ids
+from accounts.friends import accepted_friend_ids, can_view_player_cards
 
 from .models import Card, PackOpening, PackPull
 
 ENV_PATHS = (
     Path(__file__).resolve().parent.parent / '.env',
     Path(__file__).resolve().parent.parent.parent / '.env',
+    Path(__file__).resolve().parent.parent.parent / '.env.local',
 )
 PLACEHOLDER_KEYS = {'', 'paste_your_key_here'}
 
@@ -187,23 +189,48 @@ User's story:
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_cards(request):
-    cards = Card.objects.filter(owner=request.user).order_by('-created_at')
+    owner_id = request.query_params.get('user_id') or request.user.id
+    try:
+        owner_id = int(owner_id)
+    except (TypeError, ValueError):
+        return Response({'error': 'Invalid user_id.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not can_view_player_cards(request.user, owner_id):
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    cards = Card.objects.filter(owner_id=owner_id).order_by('-created_at')
     return Response([card_payload(card) for card in cards])
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def card_image(request, card_id):
-    card = get_object_or_404(Card, pk=card_id, owner=request.user)
+    card = get_object_or_404(Card, pk=card_id)
+    if not can_view_player_cards(request.user, card.owner_id):
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        image_file = card.image.open('rb')
+    except FileNotFoundError:
+        return Response({'detail': 'Image not found.'}, status=status.HTTP_404_NOT_FOUND)
     content_type = mimetypes.guess_type(card.image.name)[0] or 'application/octet-stream'
-    return FileResponse(card.image.open('rb'), content_type=content_type)
+    return FileResponse(image_file, content_type=content_type)
 
 
 PACK_COOLDOWN = timedelta(hours=2)
 PACK_SIZE = 3
 
 
+def stored_card_image(card):
+    try:
+        return bool(card.image) and card.image.storage.exists(card.image.name)
+    except Exception:
+        return False
+
+
 def copy_friend_card(original, new_owner):
+    try:
+        with original.image.open('rb') as image_file:
+            data = image_file.read()
+    except FileNotFoundError:
+        return None
     card = Card(
         owner=new_owner,
         story=original.story,
@@ -215,8 +242,7 @@ def copy_friend_card(original, new_owner):
         overall_score=original.overall_score,
         rarity=original.rarity,
     )
-    with original.image.open('rb') as image_file:
-        card.image.save(Path(original.image.name).name, ContentFile(image_file.read()), save=True)
+    card.image.save(Path(original.image.name).name, ContentFile(data), save=True)
     return card
 
 
@@ -232,7 +258,8 @@ def latest_opening(user):
 
 def pack_status_payload(user):
     friends = accepted_friend_ids(user)
-    pool_size = Card.objects.filter(owner_id__in=friends).count() if friends else 0
+    friend_cards = list(Card.objects.filter(owner_id__in=friends)) if friends else []
+    pool_size = sum(1 for card in friend_cards if stored_card_image(card))
     opening = latest_opening(user)
     remaining = 0
     if opening:
@@ -282,15 +309,32 @@ def open_pack(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    sources = list(
-        Card.objects.filter(owner_id__in=accepted_friend_ids(request.user)).select_related('owner').order_by('?')[
-            :PACK_SIZE
-        ]
-    )
+    readable = [
+        card
+        for card in Card.objects.filter(owner_id__in=accepted_friend_ids(request.user)).select_related('owner')
+        if stored_card_image(card)
+    ]
+    random.shuffle(readable)
+    sources = readable[:PACK_SIZE]
+    if not sources:
+        return Response(
+            {**current, 'error': 'Your friends have not uploaded any cards yet.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    copies = []
     with transaction.atomic():
         opening = PackOpening.objects.create(user=request.user)
         for original in sources:
             copy = copy_friend_card(original, request.user)
+            if copy is None:
+                continue
             PackPull.objects.create(opening=opening, card=copy, from_user=original.owner)
+            copies.append(copy)
+        if not copies:
+            opening.delete()
+            return Response(
+                {**current, 'error': 'Friend cards could not be read. Ask them to re-upload after this update.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     return Response(pack_status_payload(request.user), status=status.HTTP_201_CREATED)

@@ -69,6 +69,15 @@ class CardOwnershipTests(TestCase):
         response = self.client.get(f'/api/cards/{self.card.id}/image/')
         self.assertEqual(response.status_code, 404)
 
+    def test_friend_can_list_and_view_cards(self):
+        Friendship.objects.create(from_user=self.owner, to_user=self.other, status=Friendship.ACCEPTED)
+        self.client.force_login(self.other)
+        listing = self.client.get('/api/cards/', {'user_id': self.owner.id})
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()[0]['id'], self.card.id)
+        image = self.client.get(f'/api/cards/{self.card.id}/image/')
+        self.assertEqual(image.status_code, 200)
+
     def test_owner_can_fetch_card_image(self):
         self.client.force_login(self.owner)
         response = self.client.get(f'/api/cards/{self.card.id}/image/')
