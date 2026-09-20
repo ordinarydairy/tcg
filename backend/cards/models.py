@@ -43,6 +43,12 @@ class Card(models.Model):
     uniqueness = models.IntegerField()
     memory_story = models.IntegerField()
 
+    photo_quality_reason = models.TextField(blank=True, default='')
+    location_significance_reason = models.TextField(blank=True, default='')
+    occasion_reason = models.TextField(blank=True, default='')
+    uniqueness_reason = models.TextField(blank=True, default='')
+    memory_story_reason = models.TextField(blank=True, default='')
+
     overall_score = models.IntegerField()
     rarity = models.CharField(max_length=20)
 

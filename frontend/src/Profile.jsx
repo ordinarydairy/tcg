@@ -132,6 +132,7 @@ function Profile() {
   const cardFileInputRef = useRef(null)
   const [selectedCard, setSelectedCard] = useState(null)
   const [cardFlipped, setCardFlipped] = useState(false)
+  const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false)
   const [cardTextTone, setCardTextTone] = useState('light')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -565,6 +566,7 @@ function Profile() {
           onClick={() => {
             setSelectedCard(null)
             setCardFlipped(false)
+            setScoreBreakdownOpen(false)
           }}
         >
           <div
@@ -575,9 +577,16 @@ function Profile() {
           >
 
             <div
-              className={`card-flip ${cardFlipped ? 'is-flipped' : ''}`}
-              onClick={() => setCardFlipped((flipped) => !flipped)}
-            >
+                className={`card-flip ${cardFlipped ? 'is-flipped' : ''}`}
+                onClick={() => {
+                  if (scoreBreakdownOpen) {
+                    setScoreBreakdownOpen(false)
+                    return
+                  }
+
+                  setCardFlipped((flipped) => !flipped)
+                }}
+              >
               <div className="card-flip-inner">
 
                 {/* FRONT */}
@@ -629,6 +638,85 @@ function Profile() {
                           {selectedCard.story}
                         </p>
                       ) : null}
+
+                      <div className="card-score-area">
+                        <button
+                          type="button"
+                          className="card-score-button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            setScoreBreakdownOpen((open) => !open)
+                          }}
+                          aria-expanded={scoreBreakdownOpen}
+                        >
+                          <span className="card-score-value">
+                            {selectedCard.overall_score ?? selectedCard.score ?? 0}/100
+                          </span>
+                        </button>
+
+                        {scoreBreakdownOpen ? (
+                          <div
+                            className="card-score-breakdown"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              className="score-breakdown-close"
+                              aria-label="Close score breakdown"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                setScoreBreakdownOpen(false)
+                              }}
+                            >
+                            </button>
+
+                            <div className="score-breakdown-item">
+                            <div className="score-breakdown-heading">
+                              <span>Photo Quality</span>
+                              <strong>{selectedCard.scores?.photo_quality ?? '—'}/10</strong>
+                            </div>
+
+                            
+                          </div>
+
+                          <div className="score-breakdown-item">
+                            <div className="score-breakdown-heading">
+                              <span>Location Significance</span>
+                              <strong>{selectedCard.scores?.location_significance ?? '—'}/10</strong>
+                            </div>
+
+                            
+                          </div>
+
+                          <div className="score-breakdown-item">
+                            <div className="score-breakdown-heading">
+                              <span>Occasion</span>
+                              <strong>{selectedCard.scores?.occasion ?? '—'}/10</strong>
+                            </div>
+
+                            
+                          </div>
+
+                          <div className="score-breakdown-item">
+                            <div className="score-breakdown-heading">
+                              <span>Uniqueness</span>
+                              <strong>{selectedCard.scores?.uniqueness ?? '—'}/10</strong>
+                            </div>
+
+                            
+                          </div>
+
+                          <div className="score-breakdown-item">
+                            <div className="score-breakdown-heading">
+                              <span>Memory / Story</span>
+                              <strong>{selectedCard.scores?.memory_story ?? '—'}/10</strong>
+                            </div>
+
+                            
+                          </div>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div
@@ -659,6 +747,7 @@ function Profile() {
               onClick={() => {
                 setSelectedCard(null)
                 setCardFlipped(false)
+                setScoreBreakdownOpen(false)
               }}
             >
               Close
