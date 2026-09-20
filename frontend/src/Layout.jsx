@@ -55,7 +55,12 @@ function TabBar({ pathname, hasAlerts }) {
   const { openAddCard } = useAddCard()
   const index = activeSliderIndex(pathname)
   const [sliderIndex, setSliderIndex] = useState(index)
-  const [skipSlide, setSkipSlide] = useState(false)
+  const [skipSlide, setSkipSlide] = useState(true)
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => setSkipSlide(false))
+    return () => cancelAnimationFrame(handle)
+  }, [])
 
   useEffect(() => {
     const crossesPlus = (sliderIndex < 2 && index > 2) || (sliderIndex > 2 && index < 2)
