@@ -43,16 +43,30 @@ class Card(models.Model):
     uniqueness = models.IntegerField()
     memory_story = models.IntegerField()
 
-    photo_quality_reason = models.TextField(blank=True, default='')
-    location_significance_reason = models.TextField(blank=True, default='')
-    occasion_reason = models.TextField(blank=True, default='')
-    uniqueness_reason = models.TextField(blank=True, default='')
-    memory_story_reason = models.TextField(blank=True, default='')
+    photo_quality_reason = models.TextField(blank=True, default='', null=True)
+    location_significance_reason = models.TextField(blank=True, default='', null=True)
+    occasion_reason = models.TextField(blank=True, default='', null=True)
+    uniqueness_reason = models.TextField(blank=True, default='', null=True)
+    memory_story_reason = models.TextField(blank=True, default='', null=True)
 
     overall_score = models.IntegerField()
     rarity = models.CharField(max_length=20)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    REASON_FIELDS = (
+        'photo_quality_reason',
+        'location_significance_reason',
+        'occasion_reason',
+        'uniqueness_reason',
+        'memory_story_reason',
+    )
+
+    def __init__(self, *args, **kwargs):
+        for name in self.REASON_FIELDS:
+            if name in kwargs and kwargs[name] is None:
+                kwargs[name] = ''
+        super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         if not self.creator_id and self.owner_id:
@@ -61,6 +75,9 @@ class Card(models.Model):
             uploaded_type = getattr(self.image, 'content_type', None)
             guessed = mimetypes.guess_type(getattr(self.image, 'name', '') or '')[0]
             self.image_content_type = (uploaded_type or guessed or 'application/octet-stream')[:100]
+        for name in self.REASON_FIELDS:
+            if getattr(self, name) is None:
+                setattr(self, name, '')
         super().save(*args, **kwargs)
 
     def __str__(self):

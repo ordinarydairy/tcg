@@ -4,18 +4,29 @@ from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q
 from rest_framework import serializers
 
+from cards.images import compress_uploaded_image
+
 from .models import Friendship
 
 User = get_user_model()
 
 
+def accepted_friend_count(user):
+    return Friendship.objects.filter(
+        status=Friendship.ACCEPTED,
+    ).filter(
+        Q(from_user=user) | Q(to_user=user),
+    ).count()
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile_photo = serializers.SerializerMethodField()
+    friend_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'display_name', 'tag', 'profile_photo', 'bio')
-        read_only_fields = ('id', 'email', 'tag', 'profile_photo')
+        fields = ('id', 'email', 'display_name', 'tag', 'profile_photo', 'bio', 'friend_count')
+        read_only_fields = ('id', 'email', 'tag', 'profile_photo', 'friend_count')
 
     def get_profile_photo(self, user):
         if not user.profile_photo:
@@ -23,14 +34,18 @@ class UserSerializer(serializers.ModelSerializer):
         version = Path(user.profile_photo.name).stem
         return f'/api/users/{user.id}/photo/?v={version}'
 
+    def get_friend_count(self, user):
+        return accepted_friend_count(user)
+
 
 class PlayerSerializer(serializers.ModelSerializer):
     friendship_status = serializers.SerializerMethodField()
     profile_photo = serializers.SerializerMethodField()
+    friend_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'display_name', 'tag', 'profile_photo', 'bio', 'friendship_status')
+        fields = ('id', 'display_name', 'tag', 'profile_photo', 'bio', 'friendship_status', 'friend_count')
         read_only_fields = fields
 
     def get_profile_photo(self, player):
@@ -38,6 +53,9 @@ class PlayerSerializer(serializers.ModelSerializer):
             return None
         version = Path(player.profile_photo.name).stem
         return f'/api/users/{player.id}/photo/?v={version}'
+
+    def get_friend_count(self, player):
+        return accepted_friend_count(player)
 
     def get_friendship_status(self, player):
         viewer = self.context.get('viewer')
@@ -70,6 +88,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return name
 
     def create(self, validated_data):
+        photo = validated_data.get('profile_photo')
+        if photo:
+            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=75)
+            validated_data['profile_photo'] = compressed
         return User.objects.create_user(**validated_data)
 
 
@@ -91,8 +113,11 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         photo = validated_data.get('profile_photo')
-        if photo and instance.profile_photo:
-            instance.profile_photo.delete(save=False)
+        if photo:
+            if instance.profile_photo:
+                instance.profile_photo.delete(save=False)
+            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=75)
+            validated_data['profile_photo'] = compressed
         return super().update(instance, validated_data)
 
 

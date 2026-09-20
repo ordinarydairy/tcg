@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import Cropper from 'react-easy-crop'
-import { cropImageToFile, loadImage, paintCropPreview } from './cardCrop'
+import { cropImageToFile } from './cardCrop'
 
-const CARD_ASPECT = 2/3
+const CARD_ASPECT = 2 / 3
 
 export default function CardUploadModal({
   imageSrc,
@@ -15,47 +15,15 @@ export default function CardUploadModal({
   onUpload,
 }) {
   const storyId = useId()
-  const previewRef = useRef(null)
-  const imageRef = useRef(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [story, setStory] = useState('')
   const [cropError, setCropError] = useState('')
 
-  const refreshPreview = useCallback((pixels) => {
-    const canvas = previewRef.current
-    const image = imageRef.current
-    if (!canvas || !image || !pixels) {
-      return
-    }
-    paintCropPreview(image, pixels, canvas)
+  const onCropAreaChange = useCallback((_area, pixels) => {
+    setCroppedAreaPixels(pixels)
   }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    imageRef.current = null
-    loadImage(imageSrc).then((image) => {
-      if (cancelled) {
-        return
-      }
-      imageRef.current = image
-      refreshPreview(croppedAreaPixels)
-    })
-    return () => {
-      cancelled = true
-    }
-    // Preview pixels are applied in onCropAreaChange; reload only when the source file changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageSrc, refreshPreview])
-
-  const onCropAreaChange = useCallback(
-    (_area, pixels) => {
-      setCroppedAreaPixels(pixels)
-      refreshPreview(pixels)
-    },
-    [refreshPreview],
-  )
 
   async function handleUpload() {
     if (!croppedAreaPixels) {
@@ -84,50 +52,22 @@ export default function CardUploadModal({
           {queueTotal > 1 ? ` Image ${queueIndex + 1} of ${queueTotal}.` : ''}
         </p>
 
-        <div className="card-crop-layout">
-          <div className="card-cropper">
-            <Cropper
-              image={imageSrc}
-              crop={crop}
-              zoom={zoom}
-              rotation={0}
-              minZoom={1}
-              maxZoom={3}
-              aspect={CARD_ASPECT}
-              restrictPosition
-              objectFit="contain"
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropAreaChange={onCropAreaChange}
-              onCropComplete={onCropAreaChange}
-            />
-          </div>
-
-          <aside className="card-crop-preview" aria-label="Card preview">
-            <p className="card-crop-preview-label">Card preview</p>
-
-            <div className="blank-card card-preview-card">
-              <div className="card-full-art">
-
-                <canvas
-                  ref={previewRef}
-                  className="card-full-image"
-                />
-
-                <div className="card-top-info">
-                  <h3 className="card-title">Photo Card</h3>
-                  <p className="card-rarity">Preview</p>
-                </div>
-
-                <div className="card-description-box">
-                  <p className="card-description">
-                    {story || 'Your description will appear here.'}
-                  </p>
-                </div>
-
-              </div>
-            </div>
-          </aside>
+        <div className="card-cropper">
+          <Cropper
+            image={imageSrc}
+            crop={crop}
+            zoom={zoom}
+            rotation={0}
+            minZoom={1}
+            maxZoom={3}
+            aspect={CARD_ASPECT}
+            restrictPosition
+            objectFit="contain"
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropAreaChange={onCropAreaChange}
+            onCropComplete={onCropAreaChange}
+          />
         </div>
 
         <label className="card-zoom-label">
@@ -161,7 +101,7 @@ export default function CardUploadModal({
         ) : null}
 
         <div className="card-upload-actions">
-          <button type="button" className="ghost" onClick={onCancel} disabled={submitting}>
+          <button type="button" className="card-upload-cancel" onClick={onCancel} disabled={submitting}>
             Cancel
           </button>
           {queueTotal > 1 ? (

@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { useAuth } from './AuthContext'
-import logo from './assets/logo.svg'
+import logo from './assets/logo.png'
 import PhotoCropModal from './PhotoCropModal.jsx'
 
 export default function AuthScreen() {
@@ -27,8 +27,8 @@ export default function AuthScreen() {
       setError('Please choose an image for your profile photo.')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Profile photo must be 5MB or smaller.')
+    if (file.size > 25 * 1024 * 1024) {
+      setError('Profile photo must be 25MB or smaller.')
       return
     }
     setError('')
@@ -85,7 +85,6 @@ export default function AuthScreen() {
     <main className="auth-page">
       <div className="auth-card">
         <img className="auth-logo" src={logo} alt="TCG" width="512" height="512" />
-        <p className="eyebrow">TCG</p>
         <h1>{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
         <p className="lede">
           {mode === 'signin'

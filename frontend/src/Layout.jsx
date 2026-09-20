@@ -2,19 +2,15 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { AddCardProvider, useAddCard } from './AddCardContext.jsx'
 import { fetchFriends, fetchTrades } from './api'
-import logo from './assets/logo.svg'
+import HomeLogo from './HomeLogo.jsx'
 import './Layout.css'
 
 const TABS = [
-  { to: '/', end: true, label: 'Home', Icon: HomeIcon, sliderIndex: 0 },
+  { to: '/', end: true, label: 'Home', Icon: HomeLogo, sliderIndex: 0 },
   { to: '/rooms', label: 'Rooms', Icon: RoomsIcon, sliderIndex: 1 },
   { to: '/friends', label: 'Friends', Icon: FriendsIcon, sliderIndex: 3 },
   { to: '/profile', label: 'Profile', Icon: ProfileIcon, sliderIndex: 4 },
 ]
-
-function HomeIcon() {
-  return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
-}
 
 function RoomsIcon() {
   return (
@@ -150,20 +146,27 @@ function Layout() {
 
   return (
     <AddCardProvider>
-      <div className="app-shell">
-        <div className="sky-stars" aria-hidden="true">
-          <span className="sky-star s1" />
-          <span className="sky-star s2" />
-          <span className="sky-star s3" />
-          <span className="sky-star s4" />
-          <span className="sky-star s5" />
-        </div>
-        <div className="app-content">
-          <Outlet />
-        </div>
-        <TabBar pathname={pathname} hasAlerts={hasAlerts} />
-      </div>
+      <AppShell pathname={pathname} hasAlerts={hasAlerts} />
     </AddCardProvider>
+  )
+}
+
+function AppShell({ pathname, hasAlerts }) {
+  const { overlayOpen } = useAddCard()
+  return (
+    <div className={`app-shell${overlayOpen ? ' has-card-overlay' : ''}`}>
+      <div className="sky-stars" aria-hidden="true">
+        <span className="sky-star s1" />
+        <span className="sky-star s2" />
+        <span className="sky-star s3" />
+        <span className="sky-star s4" />
+        <span className="sky-star s5" />
+      </div>
+      <div className="app-content">
+        <Outlet />
+      </div>
+      <TabBar pathname={pathname} hasAlerts={hasAlerts} />
+    </div>
   )
 }
 

@@ -26,7 +26,10 @@ export default function PhotoCropModal({
     }
     setCropError('')
     try {
-      const file = await cropImageToFile(imageSrc, croppedAreaPixels, 'profile.jpg')
+      const file = await cropImageToFile(imageSrc, croppedAreaPixels, 'profile.jpg', {
+        maxSide: 800,
+        quality: 0.78,
+      })
       await onConfirm(file)
     } catch (error) {
       setCropError(error.message || 'Could not crop this image.')
@@ -79,7 +82,7 @@ export default function PhotoCropModal({
           </p>
         ) : null}
         <div className="card-upload-actions">
-          <button type="button" className="ghost" onClick={onCancel} disabled={busy}>
+          <button type="button" className="card-upload-cancel" onClick={onCancel} disabled={busy}>
             Cancel
           </button>
           <button

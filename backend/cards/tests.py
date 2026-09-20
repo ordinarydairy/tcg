@@ -8,6 +8,7 @@ from django.utils import timezone
 from PIL import Image
 
 from accounts.models import Friendship
+from cards.images import compress_image_bytes, compress_uploaded_image
 from cards.models import MysteryPackEntry
 from .models import Card
 
@@ -33,6 +34,28 @@ def make_card(owner, name='card.png'):
         overall_score=50,
         rarity='Uncommon',
     )
+
+
+class ImageCompressionTests(TestCase):
+    def test_compress_uploaded_image_becomes_smaller_jpeg(self):
+        buffer = BytesIO()
+        Image.new('RGB', (2400, 1800), color='orange').save(buffer, format='PNG')
+        uploaded = SimpleUploadedFile('wide.png', buffer.getvalue(), content_type='image/png')
+        compressed, payload = compress_uploaded_image(uploaded, max_side=400, quality=70)
+        self.assertEqual(compressed.content_type, 'image/jpeg')
+        self.assertTrue(compressed.name.endswith('.jpg'))
+        self.assertLess(len(payload), uploaded.size)
+        jpeg = Image.open(BytesIO(payload))
+        self.assertEqual(jpeg.format, 'JPEG')
+        self.assertLessEqual(max(jpeg.size), 400)
+
+    def test_compress_image_bytes_round_trips(self):
+        buffer = BytesIO()
+        Image.new('RGB', (64, 64), color='navy').save(buffer, format='PNG')
+        payload = compress_image_bytes(buffer.getvalue(), max_side=32, quality=60)
+        jpeg = Image.open(BytesIO(payload))
+        self.assertEqual(jpeg.format, 'JPEG')
+        self.assertLessEqual(max(jpeg.size), 32)
 
 
 class CardOwnershipTests(TestCase):
@@ -90,6 +113,53 @@ class CardOwnershipTests(TestCase):
     def test_anonymous_cannot_grade_photo(self):
         response = self.client.post('/api/grade-photo/', {'image': png_file()})
         self.assertEqual(response.status_code, 403)
+
+    def test_null_score_reasons_save_as_empty_strings(self):
+        card = Card.objects.create(
+            owner=self.owner,
+            image=png_file('null-reasons.png'),
+            story='lampworking :)',
+            photo_quality=5,
+            photo_quality_reason=None,
+            location_significance=1,
+            location_significance_reason=None,
+            occasion=3,
+            occasion_reason=None,
+            uniqueness=5,
+            uniqueness_reason=None,
+            memory_story=2,
+            memory_story_reason=None,
+            overall_score=32,
+            rarity='Common',
+        )
+        card.refresh_from_db()
+        self.assertEqual(card.location_significance_reason, '')
+        self.assertEqual(card.photo_quality_reason, '')
+        self.assertEqual(card.occasion_reason, '')
+        self.assertEqual(card.uniqueness_reason, '')
+        self.assertEqual(card.memory_story_reason, '')
+
+
+class PhotoScoresTests(TestCase):
+    def test_null_reasons_become_empty_strings(self):
+        from cards.views import PhotoScores
+
+        scores = PhotoScores.model_validate(
+            {
+                'photo_quality': 5,
+                'photo_quality_reason': None,
+                'location_significance': 1,
+                'location_significance_reason': None,
+                'occasion': 3,
+                'occasion_reason': None,
+                'uniqueness': 5,
+                'uniqueness_reason': None,
+                'memory_story': 2,
+                'memory_story_reason': None,
+            }
+        )
+        self.assertEqual(scores.location_significance_reason, '')
+        self.assertEqual(scores.photo_quality_reason, '')
 
 
 class MysteryPackTests(TestCase):

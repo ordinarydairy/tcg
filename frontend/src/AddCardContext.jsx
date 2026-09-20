@@ -85,8 +85,10 @@ export function AddCardProvider({ children }) {
     }
   }
 
+  const overlayOpen = sourcePickerOpen || cameraOpen || Boolean(uploadQueue[0])
+
   return (
-    <AddCardContext.Provider value={{ openAddCard, cardsRevision }}>
+    <AddCardContext.Provider value={{ openAddCard, cardsRevision, overlayOpen }}>
       {children}
       <input
         id={cardInputId}

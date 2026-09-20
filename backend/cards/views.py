@@ -12,7 +12,7 @@ from django.utils import timezone
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -20,6 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.friends import can_view_player_cards
+from cards.images import compress_uploaded_image
 
 from .models import Card, MysteryPackEntry, PackOpening, PackPull, Trade, TradeItem
 
@@ -43,19 +44,33 @@ def gemini_api_key():
 
 class PhotoScores(BaseModel):
     photo_quality: int = Field(ge=0, le=10)
-    photo_quality_reason: str
+    photo_quality_reason: str = ''
 
     location_significance: int = Field(ge=0, le=10)
-    location_significance_reason: str
+    location_significance_reason: str = ''
 
     occasion: int = Field(ge=0, le=10)
-    occasion_reason: str
+    occasion_reason: str = ''
 
     uniqueness: int = Field(ge=0, le=10)
-    uniqueness_reason: str
+    uniqueness_reason: str = ''
 
     memory_story: int = Field(ge=0, le=10)
-    memory_story_reason: str
+    memory_story_reason: str = ''
+
+    @field_validator(
+        'photo_quality_reason',
+        'location_significance_reason',
+        'occasion_reason',
+        'uniqueness_reason',
+        'memory_story_reason',
+        mode='before',
+    )
+    @classmethod
+    def coerce_reason(cls, value):
+        if value is None:
+            return ''
+        return str(value)
 
 
 def card_creator(card):
@@ -124,7 +139,7 @@ def grade_photo(request):
     try:
         client = genai.Client(api_key=api_key)
 
-        image_bytes = image.read()
+        image, image_bytes = compress_uploaded_image(image, max_side=1200, quality=72)
         image.seek(0)
 
         prompt = f"""
@@ -206,24 +221,24 @@ or story.
             owner=request.user,
             creator=request.user,
             image=image,
-            image_content_type=(image.content_type or 'image/jpeg')[:100],
-            image_data=image_bytes,
+            image_content_type='image/jpeg',
+            image_data=None,
             story=story,
 
             photo_quality=scores.photo_quality,
-            photo_quality_reason=scores.photo_quality_reason,
+            photo_quality_reason=scores.photo_quality_reason or '',
 
             location_significance=scores.location_significance,
-            location_significance_reason=scores.location_significance_reason,
+            location_significance_reason=scores.location_significance_reason or '',
 
             occasion=scores.occasion,
-            occasion_reason=scores.occasion_reason,
+            occasion_reason=scores.occasion_reason or '',
 
             uniqueness=scores.uniqueness,
-            uniqueness_reason=scores.uniqueness_reason,
+            uniqueness_reason=scores.uniqueness_reason or '',
 
             memory_story=scores.memory_story,
-            memory_story_reason=scores.memory_story_reason,
+            memory_story_reason=scores.memory_story_reason or '',
 
             overall_score=overall_score,
             rarity=rarity,

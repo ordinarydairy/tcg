@@ -22,3 +22,6 @@ frontend/dist/
 .neon
 .env.local
 node_modules/
+
+# Local Netlify folder
+.netlify
