@@ -184,16 +184,17 @@ export function cancelTrade(tradeId) {
   return request(`/api/trades/${tradeId}/cancel/`, { method: 'POST' })
 }
 
-export function createRoom() {
+export function createRoom(cardIds = []) {
   return request('/api/rooms/', {
     method: 'POST',
+    body: { card_ids: cardIds },
   })
 }
 
-export function joinRoom(code) {
+export function joinRoom(code, cardIds = []) {
   return request('/api/rooms/join/', {
     method: 'POST',
-    body: { code },
+    body: { code, card_ids: cardIds },
   })
 }
 
@@ -233,15 +234,36 @@ export function submitIcebreaker(code, answer) {
   )
 }
 
-export function selectExchangeCards(code, giveCardId, wantCardId) {
+export function voteExchangeTrade(code, wantsTrade) {
   return request(
-    `/api/rooms/${encodeURIComponent(code)}/exchange/cards/`,
+    `/api/rooms/${encodeURIComponent(code)}/exchange/trade-vote/`,
     {
       method: 'POST',
-      body: {
-        give_card_id: giveCardId,
-        want_card_id: wantCardId,
-      },
+      body: { wants_trade: wantsTrade },
     }
+  )
+}
+
+export function addExchangeCard(code, cardId) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/exchange/add-card/`,
+    {
+      method: 'POST',
+      body: { card_id: cardId },
+    }
+  )
+}
+
+export function readyNextRound(code) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/exchange/ready/`,
+    { method: 'POST' }
+  )
+}
+
+export function endRoomGame(code) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/end-game/`,
+    { method: 'POST' }
   )
 }
