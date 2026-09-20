@@ -10,14 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
+import sys
 from pathlib import Path
+from urllib.parse import parse_qsl, unquote, urlparse
+
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / '.env.local')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
@@ -81,12 +85,35 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+def postgres_from_url(url):
+    parsed = urlparse(url)
+    options = dict(parse_qsl(parsed.query))
+    if 'sslmode' not in options:
+        options['sslmode'] = 'require'
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': unquote(parsed.path.lstrip('/')),
+        'USER': unquote(parsed.username or ''),
+        'PASSWORD': unquote(parsed.password or ''),
+        'HOST': parsed.hostname or '',
+        'PORT': parsed.port or 5432,
+        'OPTIONS': options,
+        'CONN_MAX_AGE': 60,
     }
-}
+
+
+database_url = (os.getenv('DATABASE_URL_UNPOOLED') or os.getenv('DATABASE_URL') or '').strip()
+using_shared_postgres = bool(database_url) and 'test' not in sys.argv
+
+if using_shared_postgres:
+    DATABASES = {'default': postgres_from_url(database_url)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -135,15 +162,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
+_DEV_ORIGINS = [
+    f'http://{host}:{port}'
+    for host in ('localhost', '127.0.0.1')
+    for port in (5173, 5174, 5175, 5176)
 ]
+CORS_ALLOWED_ORIGINS = _DEV_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
+CSRF_TRUSTED_ORIGINS = _DEV_ORIGINS
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 
 # Email

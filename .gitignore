@@ -18,3 +18,6 @@ frontend/dist/
 
 # VS Code
 .vscode/
+.neon
+.env.local
+node_modules/
