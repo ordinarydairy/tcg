@@ -7,7 +7,12 @@ export function loadImage(src) {
   })
 }
 
-export async function cropImageToFile(imageSrc, pixelCrop, fileName = 'card.jpg') {
+export async function cropImageToFile(
+  imageSrc,
+  pixelCrop,
+  fileName = 'card.jpg',
+  { maxSide = 1200, quality = 0.75 } = {},
+) {
   const image = await loadImage(imageSrc)
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
@@ -21,9 +26,12 @@ export async function cropImageToFile(imageSrc, pixelCrop, fileName = 'card.jpg'
   const sourceY = Math.max(0, Math.round(pixelCrop.y))
   const sourceWidth = Math.min(width, image.naturalWidth - sourceX)
   const sourceHeight = Math.min(height, image.naturalHeight - sourceY)
+  const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight))
+  const destWidth = Math.max(1, Math.round(sourceWidth * scale))
+  const destHeight = Math.max(1, Math.round(sourceHeight * scale))
 
-  canvas.width = sourceWidth
-  canvas.height = sourceHeight
+  canvas.width = destWidth
+  canvas.height = destHeight
   context.drawImage(
     image,
     sourceX,
@@ -32,8 +40,8 @@ export async function cropImageToFile(imageSrc, pixelCrop, fileName = 'card.jpg'
     sourceHeight,
     0,
     0,
-    sourceWidth,
-    sourceHeight,
+    destWidth,
+    destHeight,
   )
 
   const blob = await new Promise((resolve, reject) => {
@@ -46,7 +54,7 @@ export async function cropImageToFile(imageSrc, pixelCrop, fileName = 'card.jpg'
         }
       },
       'image/jpeg',
-      0.92,
+      quality,
     )
   })
 

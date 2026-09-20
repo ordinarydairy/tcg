@@ -27,8 +27,8 @@ export default function AuthScreen() {
       setError('Please choose an image for your profile photo.')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Profile photo must be 5MB or smaller.')
+    if (file.size > 25 * 1024 * 1024) {
+      setError('Profile photo must be 25MB or smaller.')
       return
     }
     setError('')

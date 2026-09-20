@@ -74,7 +74,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         photo = validated_data.get('profile_photo')
         if photo:
-            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=82)
+            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=75)
             validated_data['profile_photo'] = compressed
         return User.objects.create_user(**validated_data)
 
@@ -100,7 +100,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         if photo:
             if instance.profile_photo:
                 instance.profile_photo.delete(save=False)
-            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=82)
+            compressed, _payload = compress_uploaded_image(photo, max_side=800, quality=75)
             validated_data['profile_photo'] = compressed
         return super().update(instance, validated_data)
 

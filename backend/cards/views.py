@@ -4,7 +4,6 @@ import random
 from datetime import timedelta
 from pathlib import Path
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import FileResponse, HttpResponse
@@ -126,7 +125,7 @@ def grade_photo(request):
     try:
         client = genai.Client(api_key=api_key)
 
-        image, image_bytes = compress_uploaded_image(image, max_side=1600, quality=80)
+        image, image_bytes = compress_uploaded_image(image, max_side=1200, quality=72)
         image.seek(0)
 
         prompt = f"""
@@ -209,7 +208,7 @@ or story.
             creator=request.user,
             image=image,
             image_content_type='image/jpeg',
-            image_data=None if getattr(settings, 'USE_S3_MEDIA', False) else image_bytes,
+            image_data=None,
             story=story,
 
             photo_quality=scores.photo_quality,

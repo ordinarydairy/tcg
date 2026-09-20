@@ -39,11 +39,13 @@ export default function CardCameraCapture({ onCapture, onCancel }) {
     if (!video || !video.videoWidth) {
       return
     }
+    const maxSide = 1600
+    const scale = Math.min(1, maxSide / Math.max(video.videoWidth, video.videoHeight))
     const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    canvas.getContext('2d').drawImage(video, 0, 0)
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale))
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale))
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8))
     if (!blob) {
       setError('Could not capture this photo.')
       return

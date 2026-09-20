@@ -6,8 +6,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image, ImageOps
 
 
-def compress_image_bytes(payload, max_side=1600, quality=80):
-    """Return JPEG bytes scaled down so photos do not fill Postgres."""
+def compress_image_bytes(payload, max_side=1200, quality=72):
+    """Return JPEG bytes scaled down so photos stay out of Postgres and stay small."""
     image = Image.open(BytesIO(bytes(payload)))
     image = ImageOps.exif_transpose(image)
     if image.mode != 'RGB':
@@ -18,8 +18,8 @@ def compress_image_bytes(payload, max_side=1600, quality=80):
     return buffer.getvalue()
 
 
-def compress_uploaded_image(uploaded, max_side=1600, quality=80):
-    """Return a JPEG upload and its bytes, scaled down to save database space."""
+def compress_uploaded_image(uploaded, max_side=1200, quality=72):
+    """Return a JPEG upload and its bytes, scaled down for object storage."""
     uploaded.seek(0)
     payload = compress_image_bytes(uploaded.read(), max_side=max_side, quality=quality)
     name = f'{Path(getattr(uploaded, "name", "photo") or "photo").stem}.jpg'
@@ -39,6 +39,6 @@ def jpeg_name(path_or_name):
     return f'{stem}.jpg'
 
 
-def compact_payload_for_storage(payload, name='photo.jpg', max_side=1600, quality=80):
+def compact_payload_for_storage(payload, name='photo.jpg', max_side=1200, quality=72):
     compressed = compress_image_bytes(payload, max_side=max_side, quality=quality)
     return ContentFile(compressed, name=jpeg_name(name)), compressed

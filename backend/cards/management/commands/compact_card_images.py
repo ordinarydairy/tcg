@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 
@@ -47,10 +46,7 @@ class Command(BaseCommand):
                     pass
             card.image.save(file.name, file, save=False)
             card.image_content_type = 'image/jpeg'
-            if getattr(settings, 'USE_S3_MEDIA', False):
-                card.image_data = None
-            else:
-                card.image_data = compressed
+            card.image_data = None
             card.save(update_fields=['image', 'image_content_type', 'image_data'])
             updated += 1
             self.stdout.write(
