@@ -124,6 +124,7 @@ function Profile() {
   const [bioStatus, setBioStatus] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [cards, setCards] = useState([])
+  const [cardsLoading, setCardsLoading] = useState(true)
   const [uploadQueue, setUploadQueue] = useState([])
   const [uploadError, setUploadError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -146,9 +147,11 @@ function Profile() {
     const ownerId = isOwn ? user?.id : userId
     if (!ownerId) {
       setCards([])
+      setCardsLoading(false)
       return undefined
     }
     let cancelled = false
+    setCardsLoading(true)
     async function loadCards() {
       try {
         const data = await fetchCards(isOwn ? undefined : ownerId)
@@ -158,6 +161,10 @@ function Profile() {
       } catch {
         if (!cancelled) {
           setCards([])
+        }
+      } finally {
+        if (!cancelled) {
+          setCardsLoading(false)
         }
       }
     }
@@ -524,13 +531,15 @@ function Profile() {
           <div>
             <h2 id="profile-cards-heading">Cards</h2>
             <p className="profile-cards-note">
-              {cards.length
-                ? isOwn
-                  ? 'Saved cards from your collection.'
-                  : 'Cards from their collection.'
-                : isOwn
-                  ? 'Empty slots until you upload cards.'
-                  : 'They have not uploaded cards yet.'}
+              {cardsLoading
+                ? 'Loading collection…'
+                : cards.length
+                  ? isOwn
+                    ? 'Saved cards from your collection.'
+                    : 'Cards from their collection.'
+                  : isOwn
+                    ? 'Empty slots until you upload cards.'
+                    : 'They have not uploaded cards yet.'}
             </p>
           </div>
           {isOwn ? (
@@ -552,11 +561,15 @@ function Profile() {
             onChange={handleCardFiles}
           />
         </div>
-        <ul className="card-grid">
-          {cardSlots.map((card) => (
-            <ProfileCardTile key={card.id} card={card} onOpen={setSelectedCard} />
-          ))}
-        </ul>
+        {cardsLoading ? (
+          <p className="cards-loading" role="status">Loading cards…</p>
+        ) : (
+          <ul className="card-grid">
+            {cardSlots.map((card) => (
+              <ProfileCardTile key={card.id} card={card} onOpen={setSelectedCard} />
+            ))}
+          </ul>
+        )}
       </section>
       {selectedCard ? (
         <div

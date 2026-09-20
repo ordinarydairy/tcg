@@ -52,6 +52,9 @@ export default function TradeHistoryScreen() {
               key={item.id}
               player={item.partner}
               actionLabel={tradeLabel(item)}
+              actionTone={
+                item.status === 'completed' ? 'completed' : item.status === 'cancelled' ? 'cancelled' : undefined
+              }
               onAction={() => navigate(`/trades/${item.id}`)}
             />
           ))}

@@ -22,6 +22,7 @@ export default function FriendsScreen() {
   const [tradeHistory, setTradeHistory] = useState([])
   const [busyId, setBusyId] = useState(null)
   const [searching, setSearching] = useState(false)
+  const [listsReady, setListsReady] = useState(false)
   const [error, setError] = useState('')
 
   function applyTrades(payload) {
@@ -58,6 +59,8 @@ export default function FriendsScreen() {
         setTradeHistory(openTrades.history || openTrades.trades.filter((item) => item.status !== 'pending'))
       } catch (err) {
         if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setListsReady(true)
       }
     })()
     return () => {
@@ -169,6 +172,7 @@ export default function FriendsScreen() {
                 key={item.id}
                 player={item.partner}
                 actionLabel={item.status === 'completed' ? 'Completed' : 'Cancelled'}
+                actionTone={item.status === 'completed' ? 'completed' : 'cancelled'}
                 onAction={() => navigate(`/trades/${item.id}`)}
               />
             ))}
@@ -201,7 +205,9 @@ export default function FriendsScreen() {
 
       <section className="friends-section">
         <h2>Your friends</h2>
-        {friends.length ? (
+        {!listsReady ? (
+          <p className="friends-loading" role="status">Loading friends…</p>
+        ) : friends.length ? (
           <ul className="player-list">
             {friends.map((player) => (
               <PlayerRow key={player.id} player={player} />
@@ -214,7 +220,9 @@ export default function FriendsScreen() {
 
       <section className="friends-section">
         <h2>Suggested friends</h2>
-        {suggestions.length ? (
+        {!listsReady ? (
+          <p className="friends-loading" role="status">Loading suggestions…</p>
+        ) : suggestions.length ? (
           <ul className="player-list">
             {suggestions.map((player) => (
               <PlayerRow
