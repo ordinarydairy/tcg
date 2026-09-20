@@ -11,6 +11,7 @@ backend/private_media/
 # Environment variables / API keys
 .env
 *.env
+!.env.example
 
 # Node
 frontend/node_modules/

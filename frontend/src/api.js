@@ -137,3 +137,11 @@ export function removeFriend(userId) {
 export function fetchPlayer(userId) {
   return request(`/api/users/${userId}/`)
 }
+
+export function fetchPackStatus() {
+  return request('/api/pack/')
+}
+
+export function openPack() {
+  return request('/api/pack/open/', { method: 'POST' })
+}
