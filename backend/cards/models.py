@@ -43,11 +43,11 @@ class Card(models.Model):
     uniqueness = models.IntegerField()
     memory_story = models.IntegerField()
 
-    photo_quality_reason = models.TextField(blank=True, default='')
-    location_significance_reason = models.TextField(blank=True, default='')
-    occasion_reason = models.TextField(blank=True, default='')
-    uniqueness_reason = models.TextField(blank=True, default='')
-    memory_story_reason = models.TextField(blank=True, default='')
+    photo_quality_reason = models.TextField(blank=True, default='', null=True)
+    location_significance_reason = models.TextField(blank=True, default='', null=True)
+    occasion_reason = models.TextField(blank=True, default='', null=True)
+    uniqueness_reason = models.TextField(blank=True, default='', null=True)
+    memory_story_reason = models.TextField(blank=True, default='', null=True)
 
     overall_score = models.IntegerField()
     rarity = models.CharField(max_length=20)
@@ -61,6 +61,12 @@ class Card(models.Model):
         'uniqueness_reason',
         'memory_story_reason',
     )
+
+    def __init__(self, *args, **kwargs):
+        for name in self.REASON_FIELDS:
+            if name in kwargs and kwargs[name] is None:
+                kwargs[name] = ''
+        super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         if not self.creator_id and self.owner_id:
