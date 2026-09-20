@@ -11,13 +11,13 @@ export default function CardSourcePicker({ onChooseFiles, onOpenCamera, onCancel
         <h2 id="card-source-title">New card</h2>
         <p className="card-upload-note">Choose a photo from your device or take one with the camera.</p>
         <div className="card-source-actions">
-          <button type="button" className="primary" onClick={onChooseFiles}>
+          <button type="button" className="ghost" onClick={onChooseFiles}>
             Choose from files
           </button>
-          <button type="button" className="primary" onClick={onOpenCamera}>
+          <button type="button" className="ghost" onClick={onOpenCamera}>
             Open camera
           </button>
-          <button type="button" className="ghost" onClick={onCancel}>
+          <button type="button" className="primary" onClick={onCancel}>
             Cancel
           </button>
         </div>

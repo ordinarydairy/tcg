@@ -83,7 +83,7 @@
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   align-items: start;
   padding: 8px 8px 10px;
   background: #ffffff;
@@ -96,12 +96,16 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  width: calc((100% - 16px) / 3);
+  width: calc((100% - 16px) / 5);
   height: 48px;
   display: grid;
   place-items: center;
   pointer-events: none;
   transition: transform 0.38s cubic-bezier(0.22, 1.2, 0.36, 1);
+}
+
+.tab-slider.is-instant {
+  transition: none;
 }
 
 .tab-slider-circle {
@@ -165,4 +169,38 @@
 
 .tab.active {
   color: var(--text-h);
+}
+
+.tab-fab-slot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  min-height: 72px;
+  pointer-events: none;
+}
+
+.tab-fab {
+  pointer-events: auto;
+  width: 68px;
+  height: 68px;
+  margin-top: -18px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-btn);
+}
+
+.tab-fab:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #8eb6e8;
+}
+
+.tab-fab-plus {
+  width: 30px;
+  height: 30px;
 }
