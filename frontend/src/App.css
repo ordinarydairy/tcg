@@ -12,7 +12,9 @@
 }
 
 .auth-page {
-  min-height: 100dvh;
+  min-height: 100svh;
+  padding-top: calc(32px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
