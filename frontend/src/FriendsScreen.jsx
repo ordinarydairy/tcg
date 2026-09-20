@@ -19,9 +19,15 @@ export default function FriendsScreen() {
   const [incoming, setIncoming] = useState([])
   const [suggestions, setSuggestions] = useState([])
   const [trades, setTrades] = useState([])
+  const [tradeHistory, setTradeHistory] = useState([])
   const [busyId, setBusyId] = useState(null)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState('')
+
+  function applyTrades(payload) {
+    setTrades(payload.open || payload.trades.filter((item) => item.status === 'pending'))
+    setTradeHistory(payload.history || payload.trades.filter((item) => item.status !== 'pending'))
+  }
 
   async function loadLists() {
     const [list, suggested, openTrades] = await Promise.all([
@@ -32,7 +38,7 @@ export default function FriendsScreen() {
     setFriends(list.friends)
     setIncoming(list.incoming)
     setSuggestions(suggested.users)
-    setTrades(openTrades.trades)
+    applyTrades(openTrades)
   }
 
   useEffect(() => {
@@ -48,7 +54,8 @@ export default function FriendsScreen() {
         setFriends(list.friends)
         setIncoming(list.incoming)
         setSuggestions(suggested.users)
-        setTrades(openTrades.trades)
+        setTrades(openTrades.open || openTrades.trades.filter((item) => item.status === 'pending'))
+        setTradeHistory(openTrades.history || openTrades.trades.filter((item) => item.status !== 'pending'))
       } catch (err) {
         if (!cancelled) setError(err.message)
       }
@@ -56,6 +63,18 @@ export default function FriendsScreen() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    const handle = setInterval(() => {
+      fetchTrades()
+        .then((openTrades) => {
+          setTrades(openTrades.open || openTrades.trades.filter((item) => item.status === 'pending'))
+          setTradeHistory(openTrades.history || openTrades.trades.filter((item) => item.status !== 'pending'))
+        })
+        .catch(() => {})
+    }, 4000)
+    return () => clearInterval(handle)
   }, [])
 
   useEffect(() => {
@@ -127,6 +146,22 @@ export default function FriendsScreen() {
                 key={item.id}
                 player={item.partner}
                 actionLabel={item.they_accepted && !item.you_accepted ? 'Review' : 'Open'}
+                onAction={() => navigate(`/trades/${item.id}`)}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {tradeHistory.length ? (
+        <section className="friends-section">
+          <h2>Recent trades</h2>
+          <ul className="player-list">
+            {tradeHistory.map((item) => (
+              <PlayerRow
+                key={item.id}
+                player={item.partner}
+                actionLabel={item.status === 'completed' ? 'Completed' : 'Cancelled'}
                 onAction={() => navigate(`/trades/${item.id}`)}
               />
             ))}

@@ -31,9 +31,7 @@ def locked_card_ids(exclude_trade_id=None):
 
 def trade_payload(trade, viewer, request):
     other = trade.other_user(viewer)
-    items = list(trade.items.select_related('card', 'card__owner', 'offered_by').prefetch_related(
-        'card__pack_pulls__from_user',
-    ))
+    items = list(trade.items.select_related('card', 'card__owner', 'card__creator', 'offered_by'))
     your_cards = [card_payload(item.card) for item in items if item.offered_by_id == viewer.id]
     their_cards = [card_payload(item.card) for item in items if item.offered_by_id != viewer.id]
     you_accepted = (
@@ -51,6 +49,7 @@ def trade_payload(trade, viewer, request):
         'your_cards': your_cards,
         'their_cards': their_cards,
         'is_initiator': trade.initiator_id == viewer.id,
+        'updated_at': trade.updated_at,
     }
 
 
@@ -114,10 +113,12 @@ def trades_collection(request):
     if request.method == 'GET':
         trades = Trade.objects.filter(
             Q(initiator=request.user) | Q(partner=request.user),
-            status=Trade.PENDING,
-        ).select_related('initiator', 'partner')
+        ).select_related('initiator', 'partner').order_by('-updated_at')[:40]
+        payloads = [trade_payload(trade, request.user, request) for trade in trades]
         return Response({
-            'trades': [trade_payload(trade, request.user, request) for trade in trades],
+            'trades': payloads,
+            'open': [item for item in payloads if item['status'] == Trade.PENDING],
+            'history': [item for item in payloads if item['status'] != Trade.PENDING],
         })
 
     other_id = request.data.get('user_id')

@@ -50,10 +50,7 @@ class PhotoScores(BaseModel):
 
 
 def card_creator(card):
-    pull = next(iter(card.pack_pulls.all()), None)
-    if pull is not None:
-        return pull.from_user
-    return card.owner
+    return card.creator or card.owner
 
 
 def card_payload(card):
@@ -176,6 +173,7 @@ User's story:
 
         card = Card.objects.create(
             owner=request.user,
+            creator=request.user,
             image=image,
             story=story,
             photo_quality=scores.photo_quality,
@@ -208,8 +206,7 @@ def get_cards(request):
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
     cards = (
         Card.objects.filter(owner_id=owner_id)
-        .select_related('owner')
-        .prefetch_related('pack_pulls__from_user')
+        .select_related('owner', 'creator')
         .order_by('-created_at')
     )
     return Response([card_payload(card) for card in cards])
@@ -248,6 +245,7 @@ def copy_friend_card(original, new_owner):
         return None
     card = Card(
         owner=new_owner,
+        creator=original.creator or original.owner,
         story=original.story,
         photo_quality=original.photo_quality,
         location_significance=original.location_significance,
@@ -270,7 +268,7 @@ def pack_card_payload(pull):
 def latest_opening(user):
     return PackOpening.objects.filter(user=user).prefetch_related(
         'pulls__card__owner',
-        'pulls__card__pack_pulls__from_user',
+        'pulls__card__creator',
         'pulls__from_user',
     ).first()
 
