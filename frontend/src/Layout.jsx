@@ -1,17 +1,27 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { AddCardProvider, useAddCard } from './AddCardContext.jsx'
 import { fetchFriends, fetchTrades } from './api'
 import logo from './assets/logo.svg'
 import './Layout.css'
 
 const TABS = [
-  { to: '/', end: true, label: 'Home', Icon: HomeIcon },
-  { to: '/friends', label: 'Friends', Icon: FriendsIcon },
-  { to: '/profile', label: 'Profile', Icon: ProfileIcon },
+  { to: '/', end: true, label: 'Home', Icon: HomeIcon, sliderIndex: 0 },
+  { to: '/meet', label: 'Meet', Icon: MeetIcon, sliderIndex: 1 },
+  { to: '/friends', label: 'Friends', Icon: FriendsIcon, sliderIndex: 3 },
+  { to: '/profile', label: 'Profile', Icon: ProfileIcon, sliderIndex: 4 },
 ]
 
 function HomeIcon() {
   return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
+}
+
+function MeetIcon() {
+  return (
+    <svg className="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3.5a6.5 6.5 0 0 0-6.5 6.5c0 4.55 5.2 9.5 6.18 10.4a.5.5 0 0 0 .64 0C13.3 19.5 18.5 14.55 18.5 10A6.5 6.5 0 0 0 12 3.5Zm0 8.75A2.25 2.25 0 1 1 12 8a2.25 2.25 0 0 1 0 4.25Z" />
+    </svg>
+  )
 }
 
 function FriendsIcon() {
@@ -30,15 +40,91 @@ function ProfileIcon() {
   )
 }
 
-function activeTabIndex(pathname) {
-  if (pathname.startsWith('/friends') || pathname.startsWith('/trades')) return 1
-  if (pathname.startsWith('/profile') || pathname.startsWith('/users')) return 2
+function PlusIcon() {
+  return (
+    <svg className="tab-fab-plus" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function activeSliderIndex(pathname) {
+  if (pathname.startsWith('/meet')) return 1
+  if (pathname.startsWith('/friends') || pathname.startsWith('/trades')) return 3
+  if (pathname.startsWith('/profile') || pathname.startsWith('/users')) return 4
   return 0
+}
+
+function TabBar({ pathname, hasAlerts }) {
+  const { openAddCard } = useAddCard()
+  const index = activeSliderIndex(pathname)
+  const [sliderIndex, setSliderIndex] = useState(index)
+  const [skipSlide, setSkipSlide] = useState(false)
+
+  useEffect(() => {
+    const crossesPlus = (sliderIndex < 2 && index > 2) || (sliderIndex > 2 && index < 2)
+    if (crossesPlus) {
+      setSkipSlide(true)
+      setSliderIndex(index)
+      const handle = requestAnimationFrame(() => setSkipSlide(false))
+      return () => cancelAnimationFrame(handle)
+    }
+    setSliderIndex(index)
+    return undefined
+  }, [index, sliderIndex])
+
+  return (
+    <nav className="tab-bar" aria-label="Main">
+      <span
+        className={`tab-slider${skipSlide ? ' is-instant' : ''}`}
+        style={{ transform: `translateX(${sliderIndex * 100}%)` }}
+        aria-hidden="true"
+      >
+        <span className="tab-slider-circle" />
+      </span>
+      {TABS.slice(0, 2).map(({ to, end, label, Icon, sliderIndex }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={() => (sliderIndex === index ? 'tab active' : 'tab')}
+        >
+          <span className="tab-glyph">
+            <span className="tab-icon-wrap">
+              <Icon />
+            </span>
+          </span>
+          <span className="tab-label">{label}</span>
+        </NavLink>
+      ))}
+      <div className="tab-fab-slot">
+        <button type="button" className="tab-fab" aria-label="Add cards" onClick={openAddCard}>
+          <PlusIcon />
+        </button>
+      </div>
+      {TABS.slice(2).map(({ to, end, label, Icon, sliderIndex }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={() => (sliderIndex === index ? 'tab active' : 'tab')}
+          aria-label={to === '/friends' && hasAlerts ? 'Friends, new requests' : undefined}
+        >
+          <span className="tab-glyph">
+            <span className="tab-icon-wrap">
+              <Icon />
+              {to === '/friends' && hasAlerts ? <span className="tab-badge" aria-hidden="true" /> : null}
+            </span>
+          </span>
+          <span className="tab-label">{label}</span>
+        </NavLink>
+      ))}
+    </nav>
+  )
 }
 
 function Layout() {
   const { pathname } = useLocation()
-  const index = activeTabIndex(pathname)
   const [hasAlerts, setHasAlerts] = useState(false)
 
   useEffect(() => {
@@ -63,44 +149,21 @@ function Layout() {
   }, [])
 
   return (
-    <div className="app-shell">
-      <div className="sky-stars" aria-hidden="true">
-        <span className="sky-star s1" />
-        <span className="sky-star s2" />
-        <span className="sky-star s3" />
-        <span className="sky-star s4" />
-        <span className="sky-star s5" />
+    <AddCardProvider>
+      <div className="app-shell">
+        <div className="sky-stars" aria-hidden="true">
+          <span className="sky-star s1" />
+          <span className="sky-star s2" />
+          <span className="sky-star s3" />
+          <span className="sky-star s4" />
+          <span className="sky-star s5" />
+        </div>
+        <div className="app-content">
+          <Outlet />
+        </div>
+        <TabBar pathname={pathname} hasAlerts={hasAlerts} />
       </div>
-      <div className="app-content">
-        <Outlet />
-      </div>
-      <nav className="tab-bar" aria-label="Main">
-        <span
-          className="tab-slider"
-          style={{ transform: `translateX(${index * 100}%)` }}
-          aria-hidden="true"
-        >
-          <span className="tab-slider-circle" />
-        </span>
-        {TABS.map(({ to, end, label, Icon }, tabIndex) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={() => (tabIndex === index ? 'tab active' : 'tab')}
-            aria-label={to === '/friends' && hasAlerts ? 'Friends, new requests' : undefined}
-          >
-            <span className="tab-glyph">
-              <span className="tab-icon-wrap">
-                <Icon />
-                {to === '/friends' && hasAlerts ? <span className="tab-badge" aria-hidden="true" /> : null}
-              </span>
-            </span>
-            <span className="tab-label">{label}</span>
-          </NavLink>
-        ))}
-      </nav>
-    </div>
+    </AddCardProvider>
   )
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAddCard } from './AddCardContext.jsx'
 import { cardImageSrc, donatePackCard, fetchCards, fetchPackStatus, pullPackCard } from './api'
 import './Home.css'
 
@@ -10,6 +11,7 @@ function formatRemaining(seconds) {
 }
 
 export default function HomeScreen() {
+  const { cardsRevision } = useAddCard()
   const [pack, setPack] = useState(null)
   const [cards, setCards] = useState([])
   const [remaining, setRemaining] = useState(0)
@@ -35,7 +37,7 @@ export default function HomeScreen() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [cardsRevision])
 
   useEffect(() => {
     if (remaining <= 0) {

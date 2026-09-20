@@ -117,8 +117,8 @@ function Profile() {
   const navigate = useNavigate()
   const fileInputId = useId()
   const bioId = useId()
-  const cardInputId = useId()
   const isOwn = !userId || String(user?.id) === String(userId)
+  const { openAddCard, cardsRevision } = useAddCard()
   const [remotePlayer, setRemotePlayer] = useState(null)
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(user?.bio || '')
@@ -126,12 +126,6 @@ function Profile() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [cards, setCards] = useState([])
   const [cardsLoading, setCardsLoading] = useState(true)
-  const [uploadQueue, setUploadQueue] = useState([])
-  const [uploadError, setUploadError] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [sourcePickerOpen, setSourcePickerOpen] = useState(false)
-  const [cameraOpen, setCameraOpen] = useState(false)
-  const cardFileInputRef = useRef(null)
   const [selectedCard, setSelectedCard] = useState(null)
   const [cardFlipped, setCardFlipped] = useState(false)
   const [scoreBreakdownOpen, setScoreBreakdownOpen] = useState(false)
@@ -176,7 +170,7 @@ function Profile() {
     return () => {
       cancelled = true
     }
-  }, [isOwn, userId, user?.id])
+  }, [isOwn, userId, user?.id, cardsRevision])
 
   useEffect(() => {
     setBio(user?.bio || '')
@@ -220,65 +214,6 @@ function Profile() {
     setCardTextTone(tone)
   })
   }, [selectedCard])
-
-  function revokeQueue(items) {
-    items.forEach((item) => URL.revokeObjectURL(item.url))
-  }
-
-  function enqueueCardFiles(fileList) {
-    const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'))
-    if (!files.length) {
-      return
-    }
-    setSourcePickerOpen(false)
-    setCameraOpen(false)
-    setUploadError('')
-    setUploadQueue((current) => [
-      ...current,
-      ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
-    ])
-  }
-
-  function handleCardFiles(event) {
-    enqueueCardFiles(event.target.files)
-    event.target.value = ''
-  }
-
-  function closeUploader() {
-    setUploadQueue((current) => {
-      revokeQueue(current)
-      return []
-    })
-    setUploadError('')
-    setUploading(false)
-  }
-
-  function skipCurrentUpload() {
-    setUploadQueue((current) => {
-      if (current[0]) {
-        URL.revokeObjectURL(current[0].url)
-      }
-      return current.slice(1)
-    })
-    setUploadError('')
-  }
-
-  async function uploadCurrentCard(image, story) {
-    setUploading(true)
-    setUploadError('')
-    try {
-      await gradeCard({ image, story })
-      const data = await fetchCards()
-      if (Array.isArray(data)) {
-        setCards(data)
-      }
-      skipCurrentUpload()
-    } catch (error) {
-      setUploadError(error.message || 'Could not upload this card.')
-    } finally {
-      setUploading(false)
-    }
-  }
 
   async function saveProfileEdit() {
     if (savingProfile) {
@@ -580,20 +515,11 @@ function Profile() {
             <button
               type="button"
               className="profile-photo-button"
-              onClick={() => setSourcePickerOpen(true)}
+              onClick={openAddCard}
             >
               Add cards
             </button>
           ) : null}
-          <input
-            id={cardInputId}
-            ref={cardFileInputRef}
-            className="profile-photo-input"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleCardFiles}
-          />
         </div>
         {cardsLoading ? (
           <p className="cards-loading" role="status">Loading cards…</p>
