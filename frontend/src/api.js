@@ -16,13 +16,17 @@ function formatError(payload, fallback) {
   return first ? first[0] : fallback
 }
 
+function csrfToken() {
+  return cookieCsrfToken() || csrf
+}
+
 async function request(path, { method = 'GET', body, headers } = {}) {
   const isFormData = body instanceof FormData
   const response = await fetch(path, {
     method,
     credentials: 'include',
     headers: {
-      'X-CSRFToken': csrf || cookieCsrfToken(),
+      'X-CSRFToken': csrfToken(),
       ...(isFormData || !body ? {} : { 'Content-Type': 'application/json' }),
       ...headers,
     },
@@ -41,7 +45,7 @@ async function request(path, { method = 'GET', body, headers } = {}) {
   if (!payload) {
     throw new Error('Could not reach the API. Try refreshing the page.')
   }
-  if (payload.csrfToken) csrf = payload.csrfToken
+  csrf = cookieCsrfToken() || payload.csrfToken || csrf
   return payload
 }
 

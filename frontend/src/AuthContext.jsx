@@ -33,11 +33,13 @@ export function AuthProvider({ children }) {
       loading,
       async login(email, password) {
         const nextUser = await loginRequest(email, password)
+        await ensureCsrf()
         setUser(nextUser)
         return nextUser
       },
       async register(payload) {
         const nextUser = await registerRequest(payload)
+        await ensureCsrf()
         setUser(nextUser)
         return nextUser
       },
