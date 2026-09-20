@@ -196,3 +196,52 @@ export function joinRoom(code) {
     body: { code },
   })
 }
+
+export function fetchRoom(code) {
+  return request(`/api/rooms/${encodeURIComponent(code)}/`)
+}
+
+export function leaveRoom(code) {
+  return request(`/api/rooms/${encodeURIComponent(code)}/leave/`, {
+    method: 'DELETE',
+  })
+}
+
+export function startMeeting(code) {
+  return request(`/api/rooms/${encodeURIComponent(code)}/start/`, {
+    method: 'POST',
+  })
+}
+
+export function fetchCurrentRoom() {
+  return request('/api/rooms/current/')
+}
+
+export function fetchCurrentExchange(code) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/exchange/`
+  )
+}
+
+export function submitIcebreaker(code, answer) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/exchange/answer/`,
+    {
+      method: 'POST',
+      body: { answer },
+    }
+  )
+}
+
+export function selectExchangeCards(code, giveCardId, wantCardId) {
+  return request(
+    `/api/rooms/${encodeURIComponent(code)}/exchange/cards/`,
+    {
+      method: 'POST',
+      body: {
+        give_card_id: giveCardId,
+        want_card_id: wantCardId,
+      },
+    }
+  )
+}
