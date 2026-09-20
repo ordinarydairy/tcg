@@ -1,5 +1,7 @@
 import { useId, useState } from 'react'
 import { useAuth } from './AuthContext'
+import logo from './assets/logo.svg'
+import PhotoCropModal from './PhotoCropModal.jsx'
 
 export default function AuthScreen() {
   const { login, register } = useAuth()
@@ -9,6 +11,7 @@ export default function AuthScreen() {
   const [displayName, setDisplayName] = useState('')
   const [photo, setPhoto] = useState(null)
   const [preview, setPreview] = useState('')
+  const [cropSrc, setCropSrc] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -16,9 +19,8 @@ export default function AuthScreen() {
 
   function onPhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) {
-      setPhoto(null)
-      setPreview('')
       return
     }
     if (!file.type.startsWith('image/')) {
@@ -30,8 +32,32 @@ export default function AuthScreen() {
       return
     }
     setError('')
+    setCropSrc((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous)
+      }
+      return URL.createObjectURL(file)
+    })
+  }
+
+  function cancelPhotoCrop() {
+    setCropSrc((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous)
+      }
+      return ''
+    })
+  }
+
+  async function confirmPhotoCrop(file) {
     setPhoto(file)
-    setPreview(URL.createObjectURL(file))
+    setPreview((previous) => {
+      if (previous) {
+        URL.revokeObjectURL(previous)
+      }
+      return URL.createObjectURL(file)
+    })
+    cancelPhotoCrop()
   }
 
   async function onSubmit(event) {
@@ -39,9 +65,13 @@ export default function AuthScreen() {
     setError('')
     setSubmitting(true)
     try {
-      if (mode === 'signin') {
+    if (mode === 'signin') {
         await login(email, password)
       } else {
+        if (!photo) {
+          setError('Please choose and crop a profile photo.')
+          return
+        }
         await register({ email, password, displayName, photo })
       }
     } catch (err) {
@@ -54,6 +84,7 @@ export default function AuthScreen() {
   return (
     <main className="auth-page">
       <div className="auth-card">
+        <img className="auth-logo" src={logo} alt="TCG" width="512" height="512" />
         <p className="eyebrow">TCG</p>
         <h1>{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
         <p className="lede">
@@ -119,7 +150,6 @@ export default function AuthScreen() {
                   type="file"
                   name="profilePhoto"
                   accept="image/*"
-                  required
                   onChange={onPhotoChange}
                 />
               </div>
@@ -168,6 +198,14 @@ export default function AuthScreen() {
           </button>
         </form>
       </div>
+      {cropSrc ? (
+        <PhotoCropModal
+          imageSrc={cropSrc}
+          confirmLabel="Use photo"
+          onCancel={cancelPhotoCrop}
+          onConfirm={confirmPhotoCrop}
+        />
+      ) : null}
     </main>
   )
 }
