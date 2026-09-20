@@ -52,15 +52,14 @@
   height: 120px;
   margin: 24px auto 20px;
   position: relative;
-  color: var(--accent);
   display: grid;
   place-items: center;
 }
 
-.mystery-box .tab-logo,
-.mystery-box svg {
+.mystery-box-logo {
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 
