@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { AddCardProvider, useAddCard } from './AddCardContext.jsx'
 import { fetchFriends, fetchTrades } from './api'
-import logo from './assets/logo.svg'
+import logo from './assets/logo-tab.png'
 import './Layout.css'
 
 const TABS = [
@@ -13,7 +13,7 @@ const TABS = [
 ]
 
 function HomeIcon() {
-  return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
+  return <img className="tab-icon tab-logo" src={logo} alt="" width="36" height="36" />
 }
 
 function MeetIcon() {
