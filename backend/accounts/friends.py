@@ -1,5 +1,8 @@
+import mimetypes
+
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.http import FileResponse
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,6 +22,21 @@ def related_friendship(user, other):
 
 def other_user_id(link, user):
     return link.to_user_id if link.from_user_id == user.id else link.from_user_id
+
+
+def accepted_friend_ids(user):
+    links = Friendship.objects.filter(status=Friendship.ACCEPTED).filter(
+        Q(from_user=user) | Q(to_user=user)
+    )
+    return {
+        link.to_user_id if link.from_user_id == user.id else link.from_user_id
+        for link in links
+    }
+
+
+def can_view_player_cards(viewer, owner_id):
+    owner_id = int(owner_id)
+    return viewer.id == owner_id or owner_id in accepted_friend_ids(viewer)
 
 
 class FriendsListView(APIView):
@@ -137,3 +155,18 @@ class PlayerDetailView(APIView):
         if player is None:
             return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
         return Response(PlayerSerializer(player, context={'viewer': request.user, 'request': request}).data)
+
+
+class PlayerPhotoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        player = User.objects.filter(id=user_id).first()
+        if player is None or not player.profile_photo:
+            return Response({'detail': 'Photo not found.'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            photo = player.profile_photo.open('rb')
+        except FileNotFoundError:
+            return Response({'detail': 'Photo not found.'}, status=status.HTTP_404_NOT_FOUND)
+        content_type = mimetypes.guess_type(player.profile_photo.name)[0] or 'image/jpeg'
+        return FileResponse(photo, content_type=content_type)

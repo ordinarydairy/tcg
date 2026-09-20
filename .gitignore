@@ -11,6 +11,7 @@ backend/private_media/
 # Environment variables / API keys
 .env
 *.env
+!.env.example
 
 # Node
 frontend/node_modules/
@@ -18,3 +19,6 @@ frontend/dist/
 
 # VS Code
 .vscode/
+.neon
+.env.local
+node_modules/

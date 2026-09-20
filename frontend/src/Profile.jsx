@@ -9,6 +9,42 @@ import './Profile.css'
 
 const SLOT_COUNT = 10
 
+function ProfileCardTile({ card, onOpen }) {
+  const imageSrc = cardImageSrc(card.image)
+  const isSaved = Boolean(imageSrc)
+  return (
+    <li className="blank-card">
+      {isSaved ? (
+        <button
+          type="button"
+          className="blank-card-button"
+          onClick={() => onOpen(card)}
+        >
+          <img
+            src={imageSrc}
+            alt=""
+            className="card-full-image"
+          />
+
+          <div className="card-rarity-stars" aria-label={card.rarity}>
+            {Array.from(
+              { length: rarityStars(card.rarity).length },
+              (_, index) => (
+                <span key={index}>★</span>
+              )
+            )}
+          </div>
+        </button>
+      ) : (
+        <>
+          <div className="blank-card-art" />
+          <div className="blank-card-title" />
+        </>
+      )}
+    </li>
+  )
+}
+
 function GearIcon() {
   return (
     <svg className="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -95,17 +131,20 @@ function Profile() {
   const [cardTextTone, setCardTextTone] = useState('light')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [photoFailed, setPhotoFailed] = useState(false)
+  const [photoStatus, setPhotoStatus] = useState('')
   const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
-    if (!isOwn) {
+    const ownerId = isOwn ? user?.id : userId
+    if (!ownerId) {
       setCards([])
       return undefined
     }
     let cancelled = false
     async function loadCards() {
       try {
-        const data = await fetchCards()
+        const data = await fetchCards(isOwn ? undefined : ownerId)
         if (!cancelled && Array.isArray(data)) {
           setCards(data)
         }
@@ -119,7 +158,7 @@ function Profile() {
     return () => {
       cancelled = true
     }
-  }, [isOwn])
+  }, [isOwn, userId, user?.id])
 
   useEffect(() => {
     setBio(user?.bio || '')
@@ -141,6 +180,10 @@ function Profile() {
       cancelled = true
     }
   }, [isOwn, userId])
+
+  useEffect(() => {
+    setPhotoFailed(false)
+  }, [player?.id, player?.profile_photo])
 
   useEffect(() => {
     return () => {
@@ -238,19 +281,36 @@ function Profile() {
     }
   }
 
-  function handlePhotoChange(event) {
+  async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) {
       return
     }
 
     const nextUrl = URL.createObjectURL(file)
+    setPhotoFailed(false)
+    setPhotoStatus('Saving photo…')
     setAvatarUrl((previousUrl) => {
       if (previousUrl) {
         URL.revokeObjectURL(previousUrl)
       }
       return nextUrl
     })
+    try {
+      const body = new FormData()
+      body.append('profile_photo', file)
+      await updateProfile(body)
+      setPhotoStatus('Photo saved')
+      setAvatarUrl((previousUrl) => {
+        if (previousUrl) {
+          URL.revokeObjectURL(previousUrl)
+        }
+        return null
+      })
+    } catch (error) {
+      setPhotoStatus(error.message || 'Could not save photo.')
+    }
   }
 
   async function handleFriendship() {
@@ -326,8 +386,12 @@ function Profile() {
 
       <section className="profile-identity">
         <div className="profile-avatar">
-          {photoSrc ? (
-            <img src={photoSrc} alt={`${displayName}'s profile`} />
+          {photoSrc && !photoFailed ? (
+            <img
+              src={photoSrc}
+              alt={`${displayName}'s profile`}
+              onError={() => setPhotoFailed(true)}
+            />
           ) : (
             <div className="profile-avatar-placeholder" aria-hidden="true">
               {displayName.slice(0, 1).toUpperCase()}
@@ -340,6 +404,7 @@ function Profile() {
             <label className="profile-photo-button" htmlFor={fileInputId}>
               Change photo
             </label>
+            {photoStatus ? <p className="profile-bio-hint">{photoStatus}</p> : null}
             <input
               id={fileInputId}
               className="profile-photo-input"
@@ -390,8 +455,12 @@ function Profile() {
             <h2 id="profile-cards-heading">Cards</h2>
             <p className="profile-cards-note">
               {cards.length
-                ? 'Saved cards from your collection.'
-                : 'Empty slots until you upload cards.'}
+                ? isOwn
+                  ? 'Saved cards from your collection.'
+                  : 'Cards from their collection.'
+                : isOwn
+                  ? 'Empty slots until you upload cards.'
+                  : 'They have not uploaded cards yet.'}
             </p>
           </div>
           {isOwn ? (
@@ -409,41 +478,9 @@ function Profile() {
           />
         </div>
         <ul className="card-grid">
-          {cardSlots.map((card) => {
-            const imageSrc = cardImageSrc(card.image)
-            const isSaved = Boolean(imageSrc)
-            return (
-              <li key={card.id} className="blank-card">
-                {isSaved ? (
-                  <button
-                    type="button"
-                    className="blank-card-button"
-                    onClick={() => setSelectedCard(card)}
-                  >
-                    <img
-                      src={imageSrc}
-                      alt=""
-                      className="card-full-image"
-                    />
-
-                    <div className="card-rarity-stars" aria-label={card.rarity}>
-                      {Array.from(
-                        { length: rarityStars(card.rarity).length },
-                        (_, index) => (
-                          <span key={index}>★</span>
-                        )
-                      )}
-                    </div>
-                  </button>
-                ) : (
-                  <>
-                    <div className="blank-card-art" />
-                    <div className="blank-card-title" />
-                  </>
-                )}
-              </li>
-            )
-          })}
+          {cardSlots.map((card) => (
+            <ProfileCardTile key={card.id} card={card} onOpen={setSelectedCard} />
+          ))}
         </ul>
       </section>
       {selectedCard ? (

@@ -16,13 +16,17 @@ function formatError(payload, fallback) {
   return first ? first[0] : fallback
 }
 
+function csrfToken() {
+  return cookieCsrfToken() || csrf
+}
+
 async function request(path, { method = 'GET', body, headers } = {}) {
   const isFormData = body instanceof FormData
   const response = await fetch(path, {
     method,
     credentials: 'include',
     headers: {
-      'X-CSRFToken': csrf || cookieCsrfToken(),
+      'X-CSRFToken': csrfToken(),
       ...(isFormData || !body ? {} : { 'Content-Type': 'application/json' }),
       ...headers,
     },
@@ -41,7 +45,7 @@ async function request(path, { method = 'GET', body, headers } = {}) {
   if (!payload) {
     throw new Error('Could not reach the API. Try refreshing the page.')
   }
-  if (payload.csrfToken) csrf = payload.csrfToken
+  csrf = cookieCsrfToken() || payload.csrfToken || csrf
   return payload
 }
 
@@ -80,8 +84,9 @@ export function logout() {
   return request('/api/auth/logout/', { method: 'POST' })
 }
 
-export function fetchCards() {
-  return request('/api/cards/')
+export function fetchCards(userId) {
+  const query = userId ? `?user_id=${encodeURIComponent(userId)}` : ''
+  return request(`/api/cards/${query}`)
 }
 
 export function gradeCard({ image, story }) {
@@ -132,4 +137,12 @@ export function removeFriend(userId) {
 
 export function fetchPlayer(userId) {
   return request(`/api/users/${userId}/`)
+}
+
+export function fetchPackStatus() {
+  return request('/api/pack/')
+}
+
+export function openPack() {
+  return request('/api/pack/open/', { method: 'POST' })
 }
