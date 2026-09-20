@@ -91,7 +91,7 @@ export default function FriendsScreen() {
           <input
             type="search"
             value={query}
-            placeholder="Search by display name"
+            placeholder="Search by name or player ID"
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
@@ -116,26 +116,9 @@ export default function FriendsScreen() {
             </ul>
           ) : (
             <p className="friends-empty">
-              {searching ? 'Searching…' : 'No players match that name.'}
+              {searching ? 'Searching…' : 'No players match that name or ID.'}
             </p>
           )}
-        </section>
-      ) : null}
-
-      {incoming.length ? (
-        <section className="friends-section">
-          <h2>Friend requests</h2>
-          <ul className="player-list">
-            {incoming.map((player) => (
-              <PlayerRow
-                key={player.id}
-                player={player}
-                actionLabel="Accept"
-                actionBusy={busyId === player.id}
-                onAction={handleAction}
-              />
-            ))}
-          </ul>
         </section>
       ) : null}
 
@@ -170,6 +153,23 @@ export default function FriendsScreen() {
           <p className="friends-empty">No other players to suggest yet.</p>
         )}
       </section>
+
+      {incoming.length ? (
+        <section className="friends-section">
+          <h2>Pending requests</h2>
+          <ul className="player-list">
+            {incoming.map((player) => (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                actionLabel="Accept"
+                actionBusy={busyId === player.id}
+                onAction={handleAction}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   )
 }

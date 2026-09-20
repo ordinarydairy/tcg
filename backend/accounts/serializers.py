@@ -14,8 +14,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'display_name', 'profile_photo', 'bio')
-        read_only_fields = ('id', 'email', 'display_name', 'profile_photo')
+        fields = ('id', 'email', 'display_name', 'tag', 'profile_photo', 'bio')
+        read_only_fields = ('id', 'email', 'tag', 'profile_photo')
 
     def get_profile_photo(self, user):
         if not user.profile_photo:
@@ -30,7 +30,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'display_name', 'profile_photo', 'friendship_status')
+        fields = ('id', 'display_name', 'tag', 'profile_photo', 'bio', 'friendship_status')
         read_only_fields = fields
 
     def get_profile_photo(self, player):
@@ -78,10 +78,16 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('bio', 'profile_photo')
+        fields = ('bio', 'display_name', 'profile_photo')
 
     def validate_bio(self, value):
         return value.strip()[:500]
+
+    def validate_display_name(self, value):
+        name = value.strip()
+        if len(name) < 2:
+            raise serializers.ValidationError('Display name must be at least 2 characters.')
+        return name
 
     def update(self, instance, validated_data):
         photo = validated_data.get('profile_photo')

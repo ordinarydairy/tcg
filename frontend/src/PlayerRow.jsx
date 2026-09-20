@@ -26,7 +26,10 @@ export default function PlayerRow({ player, actionLabel, actionBusy, onAction })
     <li className="player-row">
       <Link className="player-identity" to={`/users/${player.id}`}>
         <PlayerAvatar player={player} />
-        <span className="player-name">{player.display_name}</span>
+        <span className="player-copy">
+          <span className="player-name">{player.display_name}</span>
+          {player.tag ? <span className="player-tag">#{player.tag}</span> : null}
+        </span>
       </Link>
       {actionLabel ? (
         <button
