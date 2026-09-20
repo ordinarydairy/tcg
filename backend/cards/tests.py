@@ -1,10 +1,14 @@
+from datetime import timedelta
 from io import BytesIO
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.utils import timezone
 from PIL import Image
 
+from accounts.models import Friendship
+from cards.models import PackOpening
 from .models import Card
 
 User = get_user_model()
@@ -74,3 +78,44 @@ class CardOwnershipTests(TestCase):
     def test_anonymous_cannot_grade_photo(self):
         response = self.client.post('/api/grade-photo/', {'image': png_file()})
         self.assertEqual(response.status_code, 403)
+
+
+class MysteryPackTests(TestCase):
+    def setUp(self):
+        self.claire = User.objects.create_user(
+            email='claire@example.com',
+            password='secretpass123',
+            display_name='Claire',
+        )
+        self.sam = User.objects.create_user(
+            email='sam@example.com',
+            password='secretpass123',
+            display_name='Sam',
+        )
+        self.client.force_login(self.claire)
+
+    def test_pack_needs_friends_with_cards(self):
+        empty = self.client.post('/api/pack/open/')
+        self.assertEqual(empty.status_code, 400)
+
+        Friendship.objects.create(from_user=self.claire, to_user=self.sam, status=Friendship.ACCEPTED)
+        no_cards = self.client.post('/api/pack/open/')
+        self.assertEqual(no_cards.status_code, 400)
+
+        make_card(self.sam)
+        opened = self.client.post('/api/pack/open/')
+        self.assertEqual(opened.status_code, 201)
+        cards = opened.json()['last_opening']['cards']
+        self.assertEqual(len(cards), 1)
+        self.assertEqual(cards[0]['from_friend'], 'Sam')
+        self.assertEqual(Card.objects.filter(owner=self.claire).count(), 1)
+
+        blocked = self.client.post('/api/pack/open/')
+        self.assertEqual(blocked.status_code, 429)
+        self.assertFalse(blocked.json()['ready'])
+
+        PackOpening.objects.filter(user=self.claire).update(
+            created_at=timezone.now() - timedelta(hours=3),
+        )
+        again = self.client.post('/api/pack/open/')
+        self.assertEqual(again.status_code, 201)

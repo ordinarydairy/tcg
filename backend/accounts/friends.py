@@ -21,6 +21,16 @@ def other_user_id(link, user):
     return link.to_user_id if link.from_user_id == user.id else link.from_user_id
 
 
+def accepted_friend_ids(user):
+    links = Friendship.objects.filter(status=Friendship.ACCEPTED).filter(
+        Q(from_user=user) | Q(to_user=user)
+    )
+    return {
+        link.to_user_id if link.from_user_id == user.id else link.from_user_id
+        for link in links
+    }
+
+
 class FriendsListView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -38,3 +38,32 @@ class Card(models.Model):
 
     def __str__(self):
         return f"{self.rarity} Card ({self.overall_score}/100)"
+
+
+class PackOpening(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pack_openings',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class PackPull(models.Model):
+    opening = models.ForeignKey(
+        PackOpening,
+        on_delete=models.CASCADE,
+        related_name='pulls',
+    )
+    card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='pack_pulls')
+    from_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='gifted_pack_cards',
+    )
+
+    class Meta:
+        ordering = ['id']

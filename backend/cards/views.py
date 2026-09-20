@@ -1,10 +1,13 @@
 import mimetypes
 import os
-
+from datetime import timedelta
 from pathlib import Path
 
+from django.core.files.base import ContentFile
+from django.db import transaction
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -15,9 +18,25 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Card
+from accounts.friends import accepted_friend_ids
 
-load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+from .models import Card, PackOpening, PackPull
+
+ENV_PATHS = (
+    Path(__file__).resolve().parent.parent / '.env',
+    Path(__file__).resolve().parent.parent.parent / '.env',
+)
+PLACEHOLDER_KEYS = {'', 'paste_your_key_here'}
+
+
+def gemini_api_key():
+    for path in ENV_PATHS:
+        load_dotenv(path, override=False)
+    for name in ('GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENAI_API_KEY'):
+        value = (os.getenv(name) or '').strip().strip('"').strip("'")
+        if value.lower() not in PLACEHOLDER_KEYS:
+            return value
+    return ''
 
 
 class PhotoScores(BaseModel):
@@ -59,11 +78,16 @@ def grade_photo(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = gemini_api_key()
 
     if not api_key:
         return Response(
-            {'error': 'GEMINI_API_KEY was not found.'},
+            {
+                'error': (
+                    'GEMINI_API_KEY was not found. Add it to backend/.env '
+                    '(see backend/.env.example) and try the upload again.'
+                ),
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -173,3 +197,100 @@ def card_image(request, card_id):
     card = get_object_or_404(Card, pk=card_id, owner=request.user)
     content_type = mimetypes.guess_type(card.image.name)[0] or 'application/octet-stream'
     return FileResponse(card.image.open('rb'), content_type=content_type)
+
+
+PACK_COOLDOWN = timedelta(hours=2)
+PACK_SIZE = 3
+
+
+def copy_friend_card(original, new_owner):
+    card = Card(
+        owner=new_owner,
+        story=original.story,
+        photo_quality=original.photo_quality,
+        location_significance=original.location_significance,
+        occasion=original.occasion,
+        uniqueness=original.uniqueness,
+        memory_story=original.memory_story,
+        overall_score=original.overall_score,
+        rarity=original.rarity,
+    )
+    with original.image.open('rb') as image_file:
+        card.image.save(Path(original.image.name).name, ContentFile(image_file.read()), save=True)
+    return card
+
+
+def pack_card_payload(pull):
+    payload = card_payload(pull.card)
+    payload['from_friend'] = pull.from_user.display_name
+    return payload
+
+
+def latest_opening(user):
+    return PackOpening.objects.filter(user=user).prefetch_related('pulls__card', 'pulls__from_user').first()
+
+
+def pack_status_payload(user):
+    friends = accepted_friend_ids(user)
+    pool_size = Card.objects.filter(owner_id__in=friends).count() if friends else 0
+    opening = latest_opening(user)
+    remaining = 0
+    if opening:
+        elapsed = timezone.now() - opening.created_at
+        remaining = max(0, int((PACK_COOLDOWN - elapsed).total_seconds()))
+    cooldown_seconds = int(PACK_COOLDOWN.total_seconds())
+    progress = 1 if remaining == 0 else (cooldown_seconds - remaining) / cooldown_seconds
+    return {
+        'ready': remaining == 0,
+        'cooldown_seconds': cooldown_seconds,
+        'remaining_seconds': remaining,
+        'progress': progress,
+        'friend_count': len(friends),
+        'pool_size': pool_size,
+        'last_opening': None
+        if opening is None
+        else {
+            'created_at': opening.created_at,
+            'cards': [pack_card_payload(pull) for pull in opening.pulls.all()],
+        },
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def pack_status(request):
+    return Response(pack_status_payload(request.user))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def open_pack(request):
+    current = pack_status_payload(request.user)
+    if not current['ready']:
+        return Response(
+            {**current, 'error': 'Mystery pack is on cooldown. Check back in a couple of hours.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+    if current['friend_count'] == 0:
+        return Response(
+            {**current, 'error': 'Add friends before you can open a mystery pack.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if current['pool_size'] == 0:
+        return Response(
+            {**current, 'error': 'Your friends have not uploaded any cards yet.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    sources = list(
+        Card.objects.filter(owner_id__in=accepted_friend_ids(request.user)).select_related('owner').order_by('?')[
+            :PACK_SIZE
+        ]
+    )
+    with transaction.atomic():
+        opening = PackOpening.objects.create(user=request.user)
+        for original in sources:
+            copy = copy_friend_card(original, request.user)
+            PackPull.objects.create(opening=opening, card=copy, from_user=original.owner)
+
+    return Response(pack_status_payload(request.user), status=status.HTTP_201_CREATED)
