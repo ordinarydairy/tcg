@@ -1,8 +1,8 @@
 # Tableau
 
-Tableau is a collectible-card app for friendships that last past orientation small talk. Freshman year often starts with the same three questions—name, major, hometown—then a contact swap that never turns into another conversation. Tableau gives people something better to share: cards made from the memories that actually matter.
+Tableau is a collectible-card app for friendships that last past orientation small talk. Freshman year often starts with the same three questions -- name, major, hometown -- then a contact swap that never turns into another conversation. Tableau gives people something better to share: cards made from the memories that actually matter.
 
-Each card starts as a photo and a short story. The backend grades that memory for meaning, not just how pretty the picture is, and assigns a rarity. Your collection stays private to you until you choose to meet someone, trade, or pull from the shared pack. Profiles, friends, and rooms are how those cards turn into ongoing connections instead of a one-time handshake.
+Each card starts as a photo and a short story. The backend grades that memory for meaning, and assigns a rarity. Your collection stays private to you until you choose to meet someone, trade, or pull from the shared pack. Profiles, friends, and rooms are how those cards turn into ongoing connections instead of a one-time handshake.
 
 The live web app is on Netlify, with the API on Railway and shared Postgres plus photo storage on Neon.
 
@@ -12,7 +12,7 @@ More card customization, matching based on the themes in people’s memories, ph
 
 ## Shared database (Neon)
 
-Accounts and friends live in one Postgres database so search works across the group.
+Accounts and friends exist in one Postgres database so search works across the group.
 
 1. Install the Neon CLI, sign in, and link this repo:
 
