@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tcg-shell-v1'
+const CACHE_NAME = 'tcg-shell-v2'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
