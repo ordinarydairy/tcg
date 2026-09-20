@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { useAuth } from './AuthContext'
-import logo from './assets/logo.svg'
+import logo from './assets/logo.png'
 import PhotoCropModal from './PhotoCropModal.jsx'
 
 export default function AuthScreen() {

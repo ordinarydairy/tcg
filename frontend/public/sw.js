@@ -1,9 +1,16 @@
-const CACHE_NAME = 'tcg-shell-v2'
+const CACHE_NAME = 'tcg-shell-v3'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll(['/', '/index.html', '/manifest.webmanifest', '/pwa-192.png', '/pwa-512.png']),
+      cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.webmanifest',
+        '/apple-touch-icon.png',
+        '/pwa-192.png',
+        '/pwa-512.png',
+      ]),
     ),
   )
   self.skipWaiting()

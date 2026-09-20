@@ -146,7 +146,28 @@
 }
 
 .tab-logo {
+  width: 36px;
+  height: 36px;
   object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 420px) {
+  .tab-bar {
+    left: 8px;
+    right: 8px;
+    padding: 6px 4px 8px;
+  }
+
+  .tab {
+    font-size: 10px;
+    min-height: 68px;
+  }
+
+  .tab-logo {
+    width: 34px;
+    height: 34px;
+  }
 }
 
 .tab-icon-wrap {
