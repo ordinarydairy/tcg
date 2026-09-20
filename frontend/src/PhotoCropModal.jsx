@@ -26,7 +26,10 @@ export default function PhotoCropModal({
     }
     setCropError('')
     try {
-      const file = await cropImageToFile(imageSrc, croppedAreaPixels, 'profile.jpg')
+      const file = await cropImageToFile(imageSrc, croppedAreaPixels, 'profile.jpg', {
+        maxSide: 800,
+        quality: 0.78,
+      })
       await onConfirm(file)
     } catch (error) {
       setCropError(error.message || 'Could not crop this image.')

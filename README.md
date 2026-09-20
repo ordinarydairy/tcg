@@ -9,7 +9,8 @@ Accounts and friends live in one Postgres database so search works across the gr
 ```bash
 npm i -g neon@latest
 neon login
-neon link --project-id small-violet-65206938 --branch production -y
+neon link --project-id odd-breeze-51679443 --branch production -y
+neon env pull
 ```
 
 Ask a project admin to add your Neon email in the Neon console if `neon link` is denied.
@@ -22,3 +23,5 @@ python manage.py migrate
 ```
 
 Keep `.env.local` and `backend/.env` off git. `python manage.py test` still uses local SQLite.
+
+`neon env pull` writes `DATABASE_URL` plus object-storage `AWS_*` vars. Railway should use those for production (bucket `tcg-media`). Card and profile photos are JPEG-compressed and stored in that bucket, not as Postgres blobs.

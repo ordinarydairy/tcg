@@ -20,6 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.friends import can_view_player_cards
+from cards.images import compress_uploaded_image
 
 from .models import Card, MysteryPackEntry, PackOpening, PackPull, Trade, TradeItem
 
@@ -124,7 +125,7 @@ def grade_photo(request):
     try:
         client = genai.Client(api_key=api_key)
 
-        image_bytes = image.read()
+        image, image_bytes = compress_uploaded_image(image, max_side=1200, quality=72)
         image.seek(0)
 
         prompt = f"""
@@ -206,8 +207,8 @@ or story.
             owner=request.user,
             creator=request.user,
             image=image,
-            image_content_type=(image.content_type or 'image/jpeg')[:100],
-            image_data=image_bytes,
+            image_content_type='image/jpeg',
+            image_data=None,
             story=story,
 
             photo_quality=scores.photo_quality,
