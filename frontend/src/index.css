@@ -150,7 +150,7 @@
 
 body {
   margin: 0;
-  min-height: 100svh;
+  min-height: 100dvh;
   overflow: hidden;
   background:
     radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.7) 0 18px, transparent 19px),
@@ -161,8 +161,8 @@ body {
 }
 
 #root {
-  height: 100svh;
-  max-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow: hidden;
 }
 

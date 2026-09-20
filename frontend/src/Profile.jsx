@@ -506,17 +506,17 @@ function Profile() {
         <div className="profile-cards-header">
           <div>
             <h2 id="profile-cards-heading">Cards</h2>
-            <p className="profile-cards-note">
-              {cardsLoading
-                ? 'Loading collection…'
-                : cards.length
-                  ? isOwn
-                    ? 'Saved cards from your collection.'
-                    : 'Cards from their collection.'
-                  : isOwn
-                    ? 'Empty slots until you upload cards.'
-                    : 'They have not uploaded cards yet.'}
-            </p>
+            {cardsLoading || !(isOwn && cards.length) ? (
+              <p className="profile-cards-note">
+                {cardsLoading
+                  ? 'Loading collection…'
+                  : cards.length
+                    ? 'Cards from their collection.'
+                    : isOwn
+                      ? 'Empty slots until you upload cards.'
+                      : 'They have not uploaded cards yet.'}
+              </p>
+            ) : null}
           </div>
           {isOwn ? (
             <button
