@@ -45,16 +45,17 @@ function PlusIcon() {
 }
 
 function activeSliderIndex(pathname) {
+  if (pathname.startsWith('/users')) return null
   if (pathname.startsWith('/meet')) return 1
   if (pathname.startsWith('/friends') || pathname.startsWith('/trades')) return 3
-  if (pathname.startsWith('/profile') || pathname.startsWith('/users')) return 4
+  if (pathname.startsWith('/profile')) return 4
   return 0
 }
 
 function TabBar({ pathname, hasAlerts }) {
   const { openAddCard } = useAddCard()
   const index = activeSliderIndex(pathname)
-  const [sliderIndex, setSliderIndex] = useState(index)
+  const [sliderIndex, setSliderIndex] = useState(index ?? 0)
   const [skipSlide, setSkipSlide] = useState(true)
 
   useEffect(() => {
@@ -63,6 +64,9 @@ function TabBar({ pathname, hasAlerts }) {
   }, [])
 
   useEffect(() => {
+    if (index == null) {
+      return undefined
+    }
     const crossesPlus = (sliderIndex < 2 && index > 2) || (sliderIndex > 2 && index < 2)
     if (crossesPlus) {
       setSkipSlide(true)
@@ -74,21 +78,26 @@ function TabBar({ pathname, hasAlerts }) {
     return undefined
   }, [index, sliderIndex])
 
+  const activeIndex = index ?? -1
+  const showSlider = index != null
+
   return (
     <nav className="tab-bar" aria-label="Main">
-      <span
-        className={`tab-slider${skipSlide ? ' is-instant' : ''}`}
-        style={{ transform: `translateX(${sliderIndex * 100}%)` }}
-        aria-hidden="true"
-      >
-        <span className="tab-slider-circle" />
-      </span>
-      {TABS.slice(0, 2).map(({ to, end, label, Icon, sliderIndex }) => (
+      {showSlider ? (
+        <span
+          className={`tab-slider${skipSlide ? ' is-instant' : ''}`}
+          style={{ transform: `translateX(${sliderIndex * 100}%)` }}
+          aria-hidden="true"
+        >
+          <span className="tab-slider-circle" />
+        </span>
+      ) : null}
+      {TABS.slice(0, 2).map(({ to, end, label, Icon, sliderIndex: tabIndex }) => (
         <NavLink
           key={to}
           to={to}
           end={end}
-          className={() => (sliderIndex === index ? 'tab active' : 'tab')}
+          className={() => (tabIndex === activeIndex ? 'tab active' : 'tab')}
         >
           <span className="tab-glyph">
             <span className="tab-icon-wrap">
@@ -103,12 +112,12 @@ function TabBar({ pathname, hasAlerts }) {
           <PlusIcon />
         </button>
       </div>
-      {TABS.slice(2).map(({ to, end, label, Icon, sliderIndex }) => (
+      {TABS.slice(2).map(({ to, end, label, Icon, sliderIndex: tabIndex }) => (
         <NavLink
           key={to}
           to={to}
           end={end}
-          className={() => (sliderIndex === index ? 'tab active' : 'tab')}
+          className={() => (tabIndex === activeIndex ? 'tab active' : 'tab')}
           aria-label={to === '/friends' && hasAlerts ? 'Friends, new requests' : undefined}
         >
           <span className="tab-glyph">

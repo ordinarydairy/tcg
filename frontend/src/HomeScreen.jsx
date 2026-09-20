@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAddCard } from './AddCardContext.jsx'
 import { cardImageSrc, donatePackCard, fetchCards, fetchPackStatus, pullPackCard } from './api'
+import HomeLogo from './HomeLogo.jsx'
 import './Home.css'
 
 function formatRemaining(seconds) {
@@ -124,8 +125,7 @@ export default function HomeScreen() {
         </p>
 
         <div className="mystery-box">
-          <div className="mystery-box-lid" aria-hidden="true" />
-          <div className="mystery-box-body" aria-hidden="true">?</div>
+          <HomeLogo />
           <div className="pack-credits" aria-label={`${credits} trade-in credits`}>
             {credits}
           </div>
