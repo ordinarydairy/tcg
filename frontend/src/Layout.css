@@ -88,7 +88,7 @@
   position: fixed;
   left: 16px;
   right: 16px;
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5px + env(safe-area-inset-bottom, 0px) / 2);
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
