@@ -43,10 +43,19 @@ def gemini_api_key():
 
 class PhotoScores(BaseModel):
     photo_quality: int = Field(ge=0, le=10)
+    photo_quality_reason: str
+
     location_significance: int = Field(ge=0, le=10)
+    location_significance_reason: str
+
     occasion: int = Field(ge=0, le=10)
+    occasion_reason: str
+
     uniqueness: int = Field(ge=0, le=10)
+    uniqueness_reason: str
+
     memory_story: int = Field(ge=0, le=10)
+    memory_story_reason: str
 
 
 def card_creator(card):
@@ -55,19 +64,31 @@ def card_creator(card):
 
 def card_payload(card):
     creator = card_creator(card)
+
     return {
         'id': card.id,
         'image': f'/api/cards/{card.id}/image/',
         'creator_display_name': creator.display_name,
         'creator_tag': creator.tag,
         'story': card.story,
+
         'scores': {
             'photo_quality': card.photo_quality,
+            'photo_quality_reason': card.photo_quality_reason,
+
             'location_significance': card.location_significance,
+            'location_significance_reason': card.location_significance_reason,
+
             'occasion': card.occasion,
+            'occasion_reason': card.occasion_reason,
+
             'uniqueness': card.uniqueness,
+            'uniqueness_reason': card.uniqueness_reason,
+
             'memory_story': card.memory_story,
+            'memory_story_reason': card.memory_story_reason,
         },
+
         'overall_score': card.overall_score,
         'rarity': card.rarity,
         'created_at': card.created_at,
@@ -133,6 +154,16 @@ Judge the personal meaning communicated by the user's story.
 
 User's story:
 {story if story else "No story was provided."}
+
+For every category, also provide a short explanation of why you
+gave that score.
+
+Keep each explanation to 1-2 concise sentences.
+
+Base explanations only on visible details in the photo and information
+provided in the user's story. Do not invent people, places, events,
+relationships, or other details that are not supported by the photo
+or story.
 """
 
         response = client.models.generate_content(
@@ -178,11 +209,22 @@ User's story:
             image_content_type=(image.content_type or 'image/jpeg')[:100],
             image_data=image_bytes,
             story=story,
+
             photo_quality=scores.photo_quality,
+            photo_quality_reason=scores.photo_quality_reason,
+
             location_significance=scores.location_significance,
+            location_significance_reason=scores.location_significance_reason,
+
             occasion=scores.occasion,
+            occasion_reason=scores.occasion_reason,
+
             uniqueness=scores.uniqueness,
+            uniqueness_reason=scores.uniqueness_reason,
+
             memory_story=scores.memory_story,
+            memory_story_reason=scores.memory_story_reason,
+
             overall_score=overall_score,
             rarity=rarity,
         )
