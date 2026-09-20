@@ -7,7 +7,7 @@ import './Layout.css'
 
 const TABS = [
   { to: '/', end: true, label: 'Home', Icon: HomeIcon, sliderIndex: 0 },
-  { to: '/meet', label: 'Meet', Icon: MeetIcon, sliderIndex: 1 },
+  { to: '/rooms', label: 'Rooms', Icon: RoomsIcon, sliderIndex: 1 },
   { to: '/friends', label: 'Friends', Icon: FriendsIcon, sliderIndex: 3 },
   { to: '/profile', label: 'Profile', Icon: ProfileIcon, sliderIndex: 4 },
 ]
@@ -16,10 +16,10 @@ function HomeIcon() {
   return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
 }
 
-function MeetIcon() {
+function RoomsIcon() {
   return (
     <svg className="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3.5a6.5 6.5 0 0 0-6.5 6.5c0 4.55 5.2 9.5 6.18 10.4a.5.5 0 0 0 .64 0C13.3 19.5 18.5 14.55 18.5 10A6.5 6.5 0 0 0 12 3.5Zm0 8.75A2.25 2.25 0 1 1 12 8a2.25 2.25 0 0 1 0 4.25Z" />
+      <path d="M4 4.5h16v15H4v-15Zm2 2v11h12v-11H6Zm6 3.25a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Z" />
     </svg>
   )
 }
@@ -49,7 +49,7 @@ function PlusIcon() {
 }
 
 function activeSliderIndex(pathname) {
-  if (pathname.startsWith('/meet')) return 1
+  if (pathname.startsWith('/rooms')) return 1
   if (pathname.startsWith('/friends') || pathname.startsWith('/trades')) return 3
   if (pathname.startsWith('/profile') || pathname.startsWith('/users')) return 4
   return 0
