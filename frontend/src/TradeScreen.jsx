@@ -85,7 +85,9 @@ export default function TradeScreen() {
           }
         } else if (partnerId) {
           const open = await fetchTrades()
-          const existing = open.trades.find((item) => String(item.partner.id) === String(partnerId))
+          const existing = (open.open || open.trades).find(
+            (item) => item.status === 'pending' && String(item.partner.id) === String(partnerId),
+          )
           if (existing) {
             navigate(`/trades/${existing.id}`, { replace: true })
             return
@@ -105,6 +107,30 @@ export default function TradeScreen() {
   }, [tradeId, partnerId, navigate])
 
   useEffect(() => {
+    if (!tradeId) {
+      return undefined
+    }
+    let cancelled = false
+    const handle = setInterval(() => {
+      fetchTrade(tradeId)
+        .then((data) => {
+          if (cancelled) return
+          setTrade(data)
+          if (data.status !== 'pending') {
+            setPicking(false)
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) setError(err.message)
+        })
+    }, 2500)
+    return () => {
+      cancelled = true
+      clearInterval(handle)
+    }
+  }, [tradeId])
+
+  useEffect(() => {
     if (!picking && !tradeId && !partnerId) {
       return undefined
     }
@@ -114,7 +140,8 @@ export default function TradeScreen() {
         const [cards, open] = await Promise.all([fetchCards(), fetchTrades()])
         if (cancelled) return
         const locked = new Set()
-        open.trades.forEach((item) => {
+        const pending = open.open || open.trades.filter((item) => item.status === 'pending')
+        pending.forEach((item) => {
           if (String(item.id) === String(tradeId)) return
           item.your_cards.forEach((card) => locked.add(card.id))
         })

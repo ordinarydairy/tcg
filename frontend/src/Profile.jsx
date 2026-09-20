@@ -620,10 +620,8 @@ function Profile() {
                       </p>
 
                       <p className="card-back-username">
-                        {selectedCard.creator_display_name || player?.display_name || 'Player'}
-                        {selectedCard.creator_tag || player?.tag
-                          ? ` #${selectedCard.creator_tag || player.tag}`
-                          : ''}
+                        {selectedCard.creator_display_name || 'Player'}
+                        {selectedCard.creator_tag ? ` #${selectedCard.creator_tag}` : ''}
                       </p>
 
                       {selectedCard.story?.trim() ? (

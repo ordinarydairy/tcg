@@ -184,7 +184,8 @@ class TradeTests(TestCase):
         self.assertEqual(created.json()['partner']['display_name'], 'Sam')
 
         listed = self.client.get('/api/trades/')
-        self.assertEqual(len(listed.json()['trades']), 1)
+        self.assertEqual(len(listed.json()['open']), 1)
+        self.assertEqual(listed.json()['history'], [])
 
         self.client.force_login(self.sam)
         updated = self.client.patch(
@@ -229,6 +230,13 @@ class TradeTests(TestCase):
         self.sam_card.refresh_from_db()
         self.assertEqual(self.claire_card.owner_id, self.sam.id)
         self.assertEqual(self.sam_card.owner_id, self.claire.id)
+        self.client.force_login(self.sam)
+        sam_cards = {item['id']: item for item in self.client.get('/api/cards/').json()}
+        self.assertEqual(sam_cards[self.claire_card.id]['creator_display_name'], 'Claire')
+        self.assertEqual(sam_cards[self.claire_card.id]['creator_tag'], self.claire.tag)
+        listed = self.client.get('/api/trades/')
+        self.assertEqual(listed.json()['history'][0]['status'], 'completed')
+        self.assertEqual(listed.json()['open'], [])
 
     def test_changing_cards_resets_acceptances(self):
         created = self.client.post(
@@ -270,4 +278,11 @@ class TradeTests(TestCase):
         trade_id = created.json()['id']
         cancelled = self.client.post(f'/api/trades/{trade_id}/cancel/')
         self.assertEqual(cancelled.json()['status'], 'cancelled')
+        self.client.force_login(self.sam)
+        listed = self.client.get('/api/trades/')
+        self.assertEqual(listed.json()['open'], [])
+        self.assertEqual(listed.json()['history'][0]['id'], trade_id)
+        self.assertEqual(listed.json()['history'][0]['status'], 'cancelled')
+        detail = self.client.get(f'/api/trades/{trade_id}/')
+        self.assertEqual(detail.json()['status'], 'cancelled')
 

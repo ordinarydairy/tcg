@@ -24,6 +24,13 @@ class Card(models.Model):
         on_delete=models.CASCADE,
         related_name='cards',
     )
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_cards',
+    )
     image = models.ImageField(upload_to=card_upload_to, storage=card_storage)
     story = models.TextField(blank=True)
 
@@ -37,6 +44,11 @@ class Card(models.Model):
     rarity = models.CharField(max_length=20)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.creator_id and self.owner_id:
+            self.creator_id = self.owner_id
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.rarity} Card ({self.overall_score}/100)"
