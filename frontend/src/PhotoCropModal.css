@@ -1,0 +1,62 @@
+.card-upload-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(8, 6, 13, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.card-upload-dialog {
+  width: min(480px, 100%);
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.photo-crop-dialog h2 {
+  margin: 0;
+}
+
+.card-upload-note {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.avatar-cropper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 50svh;
+  background: var(--code-bg);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.card-zoom-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.card-upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.card-upload-submit {
+  width: auto;
+  margin-top: 0;
+}

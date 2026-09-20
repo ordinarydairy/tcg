@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { fetchFriends, fetchTrades } from './api'
+import logo from './assets/logo.svg'
 import './Layout.css'
 
 function HomeIcon() {
-  return (
-    <svg className="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4.5 10.5 12 4.5l7.5 6V20a1.5 1.5 0 0 1-1.5 1.5h-4.5v-6h-4.5v6H6A1.5 1.5 0 0 1 4.5 20z" />
-    </svg>
-  )
+  return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
 }
 
 function FriendsIcon() {
