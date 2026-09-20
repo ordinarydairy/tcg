@@ -8,6 +8,7 @@ from django.utils import timezone
 from PIL import Image
 
 from accounts.models import Friendship
+from cards.images import compress_image_bytes, compress_uploaded_image
 from cards.models import MysteryPackEntry
 from .models import Card
 
@@ -33,6 +34,28 @@ def make_card(owner, name='card.png'):
         overall_score=50,
         rarity='Uncommon',
     )
+
+
+class ImageCompressionTests(TestCase):
+    def test_compress_uploaded_image_becomes_smaller_jpeg(self):
+        buffer = BytesIO()
+        Image.new('RGB', (2400, 1800), color='orange').save(buffer, format='PNG')
+        uploaded = SimpleUploadedFile('wide.png', buffer.getvalue(), content_type='image/png')
+        compressed, payload = compress_uploaded_image(uploaded, max_side=400, quality=70)
+        self.assertEqual(compressed.content_type, 'image/jpeg')
+        self.assertTrue(compressed.name.endswith('.jpg'))
+        self.assertLess(len(payload), uploaded.size)
+        jpeg = Image.open(BytesIO(payload))
+        self.assertEqual(jpeg.format, 'JPEG')
+        self.assertLessEqual(max(jpeg.size), 400)
+
+    def test_compress_image_bytes_round_trips(self):
+        buffer = BytesIO()
+        Image.new('RGB', (64, 64), color='navy').save(buffer, format='PNG')
+        payload = compress_image_bytes(buffer.getvalue(), max_side=32, quality=60)
+        jpeg = Image.open(BytesIO(payload))
+        self.assertEqual(jpeg.format, 'JPEG')
+        self.assertLessEqual(max(jpeg.size), 32)
 
 
 class CardOwnershipTests(TestCase):

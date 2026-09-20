@@ -9,7 +9,7 @@ Accounts and friends live in one Postgres database so search works across the gr
 ```bash
 npm i -g neon@latest
 neon login
-neon link --project-id small-violet-65206938 --branch production -y
+neon link --project-id odd-breeze-51679443 --branch production -y
 ```
 
 Ask a project admin to add your Neon email in the Neon console if `neon link` is denied.
@@ -22,3 +22,10 @@ python manage.py migrate
 ```
 
 Keep `.env.local` and `backend/.env` off git. `python manage.py test` still uses local SQLite.
+
+New card photos are JPEG-compressed before they are stored. Existing photos can be compacted, and an old Neon database can be copied in without bringing full-size blobs:
+
+```bash
+python manage.py compact_card_images
+python manage.py copy_from_postgres --source "$SOURCE_DATABASE_URL"
+```
