@@ -1,3 +1,6 @@
+
+<img width="2400" height="1200" alt="image" src="https://github.com/user-attachments/assets/b9f14d81-5dc9-438c-b1c5-d583e09472e6" />
+
 # Tableau
 
 Tableau is a collectible-card app for friendships that last past orientation small talk. Freshman year often starts with the same three questions -- name, major, hometown -- then a contact swap that never turns into another conversation. Tableau gives people something better to share: cards made from the memories that actually matter.
