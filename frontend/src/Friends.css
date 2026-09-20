@@ -6,9 +6,23 @@
   text-align: left;
 }
 
-.friends-header h1 {
-  margin: 0 0 16px;
+.friends-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.friends-header-row h1 {
+  margin: 0;
   font-size: 32px;
+}
+
+.friends-header-trade {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
 }
 
 .friends-search {

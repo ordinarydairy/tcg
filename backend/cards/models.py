@@ -69,3 +69,52 @@ class PackPull(models.Model):
 
     class Meta:
         ordering = ['id']
+
+
+class Trade(models.Model):
+    PENDING = 'pending'
+    COMPLETED = 'completed'
+    CANCELLED = 'cancelled'
+    STATUS_CHOICES = (
+        (PENDING, 'Pending'),
+        (COMPLETED, 'Completed'),
+        (CANCELLED, 'Cancelled'),
+    )
+
+    initiator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='trades_started',
+    )
+    partner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='trades_received',
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    initiator_accepted = models.BooleanField(default=False)
+    partner_accepted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def other_user(self, user):
+        return self.partner if self.initiator_id == user.id else self.initiator
+
+    def is_participant(self, user):
+        return user.id in {self.initiator_id, self.partner_id}
+
+
+class TradeItem(models.Model):
+    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='items')
+    card = models.ForeignKey(Card, on_delete=models.CASCADE, related_name='trade_items')
+    offered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='offered_trade_items',
+    )
+
+    class Meta:
+        unique_together = ('trade', 'card')
