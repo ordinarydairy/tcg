@@ -82,7 +82,7 @@ export default function PhotoCropModal({
           </p>
         ) : null}
         <div className="card-upload-actions">
-          <button type="button" className="ghost" onClick={onCancel} disabled={busy}>
+          <button type="button" className="card-upload-cancel" onClick={onCancel} disabled={busy}>
             Cancel
           </button>
           <button

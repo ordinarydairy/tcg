@@ -115,10 +115,6 @@ export default function HomeScreen() {
 
   return (
     <main className="home-page">
-      <div className="pack-credits" aria-label={`${credits} trade-in credits`}>
-        {credits}
-      </div>
-
       <section className="mystery-pack">
         <p className="eyebrow">Card pack</p>
         <h1>Mystery box</h1>
@@ -127,9 +123,12 @@ export default function HomeScreen() {
           else’s card.
         </p>
 
-        <div className="mystery-box" aria-hidden="true">
-          <div className="mystery-box-lid" />
-          <div className="mystery-box-body">?</div>
+        <div className="mystery-box">
+          <div className="mystery-box-lid" aria-hidden="true" />
+          <div className="mystery-box-body" aria-hidden="true">?</div>
+          <div className="pack-credits" aria-label={`${credits} trade-in credits`}>
+            {credits}
+          </div>
         </div>
 
         <p className="pack-count">
@@ -166,7 +165,7 @@ export default function HomeScreen() {
           <h2>Last pull</h2>
           <ul className="card-grid">
             {pulls.map((card) => (
-              <li key={card.id} className="blank-card">
+              <li key={card.id} className="blank-card" data-rarity={card.rarity}>
                 <div className="blank-card-art">
                   {cardImageSrc(card.image) ? (
                     <img src={cardImageSrc(card.image)} alt="" />
@@ -198,6 +197,7 @@ export default function HomeScreen() {
                     <button
                       type="button"
                       className="blank-card pack-pick-card"
+                      data-rarity={card.rarity}
                       disabled={busy}
                       onClick={() => handleDonate(card)}
                     >
@@ -218,7 +218,7 @@ export default function HomeScreen() {
 
       {reveal ? (
         <button type="button" className="pack-reveal-overlay" onClick={() => setReveal(null)}>
-          <span className="pack-reveal-card">
+          <span className="pack-reveal-card" data-rarity={reveal.rarity}>
             {cardImageSrc(reveal.image) ? (
               <img src={cardImageSrc(reveal.image)} alt={reveal.rarity} />
             ) : null}

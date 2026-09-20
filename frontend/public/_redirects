@@ -1,1 +1,3 @@
+/api/*  https://web-production-a1efa.up.railway.app/api/:splat  200!
+/media/*  https://web-production-a1efa.up.railway.app/media/:splat  200!
 /*    /index.html   200

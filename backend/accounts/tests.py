@@ -234,6 +234,7 @@ class FriendshipApiTests(TestCase):
         profile = self.client.get(reverse('player-detail', args=[self.claire.id]))
         self.assertEqual(profile.json()['friendship_status'], 'friends')
         self.assertEqual(profile.json()['bio'], 'Hello from Claire')
+        self.assertEqual(profile.json()['friend_count'], 1)
         self.assertTrue(profile.json()['tag'])
         self.assertNotIn('email', profile.json())
 
