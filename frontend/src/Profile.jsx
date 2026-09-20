@@ -1,8 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { cardImageSrc, fetchCards, gradeCard } from './api'
-import CardCameraCapture from './CardCameraCapture.jsx'
-import CardSourcePicker from './CardSourcePicker.jsx'
-import CardUploadModal from './CardUploadModal.jsx'
+import { useEffect, useId, useState } from 'react'
+import { cardImageSrc, fetchCards } from './api'
+import { useAddCard } from './AddCardContext.jsx'
 import PhotoCropModal from './PhotoCropModal.jsx'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from './AuthContext'
@@ -51,7 +49,7 @@ function ProfileCardTile({ card, onOpen }) {
 function GearIcon() {
   return (
     <svg className="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M11.3 2.7h1.4l.3 2.2a6.8 6.8 0 0 1 1.7.7l2-1.1 1 1-1.1 2a6.8 6.8 0 0 1 .7 1.7l2.2.3v1.4l-2.2.3a6.8 6.8 0 0 1-.7 1.7l1.1 2-1 1-2-1.1a6.8 6.8 0 0 1-1.7.7l-.3 2.2h-1.4l-.3-2.2a6.8 6.8 0 0 1-1.7-.7l-2 1.1-1-1 1.1-2a6.8 6.8 0 0 1-.7-1.7l-2.2-.3v-1.4l2.2-.3a6.8 6.8 0 0 1 .7-1.7l-1.1-2 1-1 2 1.1a6.8 6.8 0 0 1 1.7-.7l.3-2.2ZM12 9.2A2.8 2.8 0 1 0 12 14.8 2.8 2.8 0 0 0 12 9.2Z" />
+      <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.05 7.05 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.48.48 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.55-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.86 14.52a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.3.59.22l2.39-.96c.5.39 1.04.71 1.62.94l.36 2.54c.05.23.25.41.48.41h3.84c.23 0 .43-.18.48-.41l.36-2.54c.59-.24 1.13-.55 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58ZM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2Z" />
     </svg>
   )
 }
@@ -727,35 +725,6 @@ function Profile() {
 
           </div>
         </div>
-      ) : null}
-      {sourcePickerOpen ? (
-        <CardSourcePicker
-          onChooseFiles={() => cardFileInputRef.current?.click()}
-          onOpenCamera={() => {
-            setSourcePickerOpen(false)
-            setCameraOpen(true)
-          }}
-          onCancel={() => setSourcePickerOpen(false)}
-        />
-      ) : null}
-      {cameraOpen ? (
-        <CardCameraCapture
-          onCapture={(file) => enqueueCardFiles([file])}
-          onCancel={() => setCameraOpen(false)}
-        />
-      ) : null}
-      {uploadQueue[0] ? (
-        <CardUploadModal
-          key={uploadQueue[0].url}
-          imageSrc={uploadQueue[0].url}
-          queueIndex={0}
-          queueTotal={uploadQueue.length}
-          submitting={uploading}
-          error={uploadError}
-          onCancel={closeUploader}
-          onSkip={skipCurrentUpload}
-          onUpload={uploadCurrentCard}
-        />
       ) : null}
       {photoCropSrc ? (
         <PhotoCropModal

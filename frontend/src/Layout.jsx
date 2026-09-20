@@ -2,19 +2,15 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { AddCardProvider, useAddCard } from './AddCardContext.jsx'
 import { fetchFriends, fetchTrades } from './api'
-import logo from './assets/logo-tab.png'
+import HomeLogo from './HomeLogo.jsx'
 import './Layout.css'
 
 const TABS = [
-  { to: '/', end: true, label: 'Home', Icon: HomeIcon, sliderIndex: 0 },
+  { to: '/', end: true, label: 'Home', Icon: HomeLogo, sliderIndex: 0 },
   { to: '/meet', label: 'Meet', Icon: MeetIcon, sliderIndex: 1 },
   { to: '/friends', label: 'Friends', Icon: FriendsIcon, sliderIndex: 3 },
   { to: '/profile', label: 'Profile', Icon: ProfileIcon, sliderIndex: 4 },
 ]
-
-function HomeIcon() {
-  return <img className="tab-icon tab-logo" src={logo} alt="" width="36" height="36" />
-}
 
 function MeetIcon() {
   return (
