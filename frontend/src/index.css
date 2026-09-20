@@ -1,20 +1,30 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --sky-top: #c8ecff;
+  --sky-bottom: #eef9ff;
+  --text: #4d5d86;
+  --text-h: #2a3f78;
+  --bg: #e6f6ff;
+  --card: #ffffff;
+  --border: #b7d7f8;
+  --code-bg: #eaf6ff;
+  --accent: #4d7dff;
+  --accent-bg: rgba(77, 125, 255, 0.12);
+  --accent-border: rgba(77, 125, 255, 0.45);
+  --pink: #f7c4d8;
+  --pink-strong: #f3a9c6;
+  --lime: #d8f07a;
+  --lime-strong: #c6e64a;
+  --social-bg: rgba(255, 255, 255, 0.78);
+  --shadow: 0 12px 28px rgba(77, 125, 255, 0.12);
+  --radius-card: 28px;
+  --radius-pill: 999px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: only light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -23,26 +33,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-  }
-}
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.7) 0 18px, transparent 19px),
+    radial-gradient(circle at 88% 14%, rgba(125, 186, 255, 0.45) 0 28px, transparent 29px),
+    radial-gradient(circle at 78% 72%, rgba(125, 186, 255, 0.28) 0 18px, transparent 19px),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+  background-attachment: fixed;
 }
 
 #root {
@@ -52,7 +55,7 @@ body {
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 800;
   color: var(--text-h);
 }
 

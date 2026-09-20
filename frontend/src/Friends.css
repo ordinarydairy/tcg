@@ -36,10 +36,10 @@
 .friends-search input {
   font: inherit;
   color: var(--text-h);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  padding: 12px 14px;
 }
 
 .friends-section-heading {
@@ -83,9 +83,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--social-bg);
+  border: 0;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
 }
 
 .player-identity {
@@ -102,14 +103,14 @@
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid var(--accent-border);
+  border: 2px solid var(--lime);
 }
 
 .player-avatar.fallback {
   display: grid;
   place-items: center;
-  background: var(--accent-bg);
-  color: var(--accent);
+  background: var(--pink);
+  color: var(--text-h);
   font-size: 18px;
 }
 
