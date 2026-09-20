@@ -16,11 +16,13 @@ from accounts.friends import (
     FriendSuggestionsView,
     FriendsListView,
     PlayerDetailView,
+    PlayerPhotoView,
 )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
+    path('api/users/<int:user_id>/photo/', PlayerPhotoView.as_view(), name='player-photo'),
     path('api/users/<int:user_id>/', PlayerDetailView.as_view(), name='player-detail'),
     path('api/friends/', FriendsListView.as_view(), name='friends-list'),
     path('api/friends/suggestions/', FriendSuggestionsView.as_view(), name='friend-suggestions'),

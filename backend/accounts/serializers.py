@@ -8,19 +8,28 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile_photo = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ('id', 'email', 'display_name', 'profile_photo', 'bio')
         read_only_fields = ('id', 'email', 'display_name', 'profile_photo')
 
+    def get_profile_photo(self, user):
+        return f'/api/users/{user.id}/photo/' if user.profile_photo else None
+
 
 class PlayerSerializer(serializers.ModelSerializer):
     friendship_status = serializers.SerializerMethodField()
+    profile_photo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'display_name', 'profile_photo', 'friendship_status')
         read_only_fields = fields
+
+    def get_profile_photo(self, player):
+        return f'/api/users/{player.id}/photo/' if player.profile_photo else None
 
     def get_friendship_status(self, player):
         viewer = self.context.get('viewer')

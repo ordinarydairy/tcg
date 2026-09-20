@@ -84,8 +84,9 @@ export function logout() {
   return request('/api/auth/logout/', { method: 'POST' })
 }
 
-export function fetchCards() {
-  return request('/api/cards/')
+export function fetchCards(userId) {
+  const query = userId ? `?user_id=${encodeURIComponent(userId)}` : ''
+  return request(`/api/cards/${query}`)
 }
 
 export function gradeCard({ image, story }) {

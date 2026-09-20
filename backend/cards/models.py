@@ -2,18 +2,20 @@ from pathlib import Path
 from uuid import uuid4
 
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import FileSystemStorage, default_storage
 from django.db import models
 
 
 def card_storage():
+    if getattr(settings, 'USE_S3_MEDIA', False):
+        return default_storage
     Path(settings.PRIVATE_MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
     return FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT)
 
 
 def card_upload_to(instance, filename):
     suffix = Path(filename).suffix.lower() or '.jpg'
-    return f'{instance.owner_id}/{uuid4().hex}{suffix}'
+    return f'cards/{instance.owner_id}/{uuid4().hex}{suffix}'
 
 
 class Card(models.Model):

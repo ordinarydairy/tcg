@@ -156,6 +156,37 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 
+USE_S3_MEDIA = bool(
+    os.getenv('AWS_ACCESS_KEY_ID')
+    and os.getenv('AWS_SECRET_ACCESS_KEY')
+    and os.getenv('AWS_ENDPOINT_URL_S3')
+) and 'test' not in sys.argv
+
+if USE_S3_MEDIA:
+    if 'storages' not in INSTALLED_APPS:
+        INSTALLED_APPS.append('storages')
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {
+                'bucket_name': os.getenv('AWS_STORAGE_BUCKET_NAME', 'tcg-media'),
+                'endpoint_url': os.getenv('AWS_ENDPOINT_URL_S3'),
+                'access_key': os.getenv('AWS_ACCESS_KEY_ID'),
+                'secret_key': os.getenv('AWS_SECRET_ACCESS_KEY'),
+                'region_name': os.getenv('AWS_REGION') or 'us-east-1',
+                'default_acl': None,
+                'querystring_auth': True,
+                'file_overwrite': False,
+                'location': 'media',
+                'addressing_style': 'path',
+                'signature_version': 's3v4',
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',

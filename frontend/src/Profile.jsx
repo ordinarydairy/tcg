@@ -9,6 +9,29 @@ import './Profile.css'
 
 const SLOT_COUNT = 10
 
+function ProfileCardTile({ card, onOpen }) {
+  const imageSrc = cardImageSrc(card.image)
+  const [failed, setFailed] = useState(false)
+  const isSaved = Boolean(imageSrc)
+  return (
+    <li className="blank-card">
+      {isSaved ? (
+        <button type="button" className="blank-card-button" onClick={() => onOpen(card)}>
+          <div className="blank-card-art">
+            {failed ? null : <img src={imageSrc} alt="" onError={() => setFailed(true)} />}
+          </div>
+          <p className="blank-card-rarity">{card.rarity}</p>
+        </button>
+      ) : (
+        <>
+          <div className="blank-card-art" />
+          <div className="blank-card-title" />
+        </>
+      )}
+    </li>
+  )
+}
+
 function GearIcon() {
   return (
     <svg className="settings-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -38,17 +61,19 @@ function Profile() {
   const [selectedCard, setSelectedCard] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [photoFailed, setPhotoFailed] = useState(false)
   const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
-    if (!isOwn) {
+    const ownerId = isOwn ? user?.id : userId
+    if (!ownerId) {
       setCards([])
       return undefined
     }
     let cancelled = false
     async function loadCards() {
       try {
-        const data = await fetchCards()
+        const data = await fetchCards(isOwn ? undefined : ownerId)
         if (!cancelled && Array.isArray(data)) {
           setCards(data)
         }
@@ -62,7 +87,7 @@ function Profile() {
     return () => {
       cancelled = true
     }
-  }, [isOwn])
+  }, [isOwn, userId, user?.id])
 
   useEffect(() => {
     setBio(user?.bio || '')
@@ -84,6 +109,10 @@ function Profile() {
       cancelled = true
     }
   }, [isOwn, userId])
+
+  useEffect(() => {
+    setPhotoFailed(false)
+  }, [player?.id, player?.profile_photo])
 
   useEffect(() => {
     return () => {
@@ -259,8 +288,12 @@ function Profile() {
 
       <section className="profile-identity">
         <div className="profile-avatar">
-          {photoSrc ? (
-            <img src={photoSrc} alt={`${displayName}'s profile`} />
+          {photoSrc && !photoFailed ? (
+            <img
+              src={photoSrc}
+              alt={`${displayName}'s profile`}
+              onError={() => setPhotoFailed(true)}
+            />
           ) : (
             <div className="profile-avatar-placeholder" aria-hidden="true">
               {displayName.slice(0, 1).toUpperCase()}
@@ -323,8 +356,12 @@ function Profile() {
             <h2 id="profile-cards-heading">Cards</h2>
             <p className="profile-cards-note">
               {cards.length
-                ? 'Saved cards from your collection.'
-                : 'Empty slots until you upload cards.'}
+                ? isOwn
+                  ? 'Saved cards from your collection.'
+                  : 'Cards from their collection.'
+                : isOwn
+                  ? 'Empty slots until you upload cards.'
+                  : 'They have not uploaded cards yet.'}
             </p>
           </div>
           {isOwn ? (
@@ -342,31 +379,9 @@ function Profile() {
           />
         </div>
         <ul className="card-grid">
-          {cardSlots.map((card) => {
-            const imageSrc = cardImageSrc(card.image)
-            const isSaved = Boolean(imageSrc)
-            return (
-              <li key={card.id} className="blank-card">
-                {isSaved ? (
-                  <button
-                    type="button"
-                    className="blank-card-button"
-                    onClick={() => setSelectedCard(card)}
-                  >
-                    <div className="blank-card-art">
-                      <img src={imageSrc} alt="" />
-                    </div>
-                    <p className="blank-card-rarity">{card.rarity}</p>
-                  </button>
-                ) : (
-                  <>
-                    <div className="blank-card-art" />
-                    <div className="blank-card-title" />
-                  </>
-                )}
-              </li>
-            )
-          })}
+          {cardSlots.map((card) => (
+            <ProfileCardTile key={card.id} card={card} onOpen={setSelectedCard} />
+          ))}
         </ul>
       </section>
       {selectedCard ? (
