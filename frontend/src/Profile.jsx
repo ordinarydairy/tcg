@@ -1,5 +1,7 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { cardImageSrc, fetchCards, gradeCard } from './api'
+import CardCameraCapture from './CardCameraCapture.jsx'
+import CardSourcePicker from './CardSourcePicker.jsx'
 import CardUploadModal from './CardUploadModal.jsx'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from './AuthContext'
@@ -125,6 +127,9 @@ function Profile() {
   const [uploadQueue, setUploadQueue] = useState([])
   const [uploadError, setUploadError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [sourcePickerOpen, setSourcePickerOpen] = useState(false)
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const cardFileInputRef = useRef(null)
   const [selectedCard, setSelectedCard] = useState(null)
   const [cardFlipped, setCardFlipped] = useState(false)
   const [cardTextTone, setCardTextTone] = useState('light')
@@ -209,19 +214,23 @@ function Profile() {
     items.forEach((item) => URL.revokeObjectURL(item.url))
   }
 
-  function handleCardFiles(event) {
-    const files = Array.from(event.target.files || []).filter((file) =>
-      file.type.startsWith('image/'),
-    )
-    event.target.value = ''
+  function enqueueCardFiles(fileList) {
+    const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'))
     if (!files.length) {
       return
     }
+    setSourcePickerOpen(false)
+    setCameraOpen(false)
     setUploadError('')
     setUploadQueue((current) => [
       ...current,
       ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
     ])
+  }
+
+  function handleCardFiles(event) {
+    enqueueCardFiles(event.target.files)
+    event.target.value = ''
   }
 
   function closeUploader() {
@@ -525,12 +534,17 @@ function Profile() {
             </p>
           </div>
           {isOwn ? (
-            <label className="profile-photo-button" htmlFor={cardInputId}>
+            <button
+              type="button"
+              className="profile-photo-button"
+              onClick={() => setSourcePickerOpen(true)}
+            >
               Add cards
-            </label>
+            </button>
           ) : null}
           <input
             id={cardInputId}
+            ref={cardFileInputRef}
             className="profile-photo-input"
             type="file"
             accept="image/*"
@@ -654,6 +668,22 @@ function Profile() {
 
           </div>
         </div>
+      ) : null}
+      {sourcePickerOpen ? (
+        <CardSourcePicker
+          onChooseFiles={() => cardFileInputRef.current?.click()}
+          onOpenCamera={() => {
+            setSourcePickerOpen(false)
+            setCameraOpen(true)
+          }}
+          onCancel={() => setSourcePickerOpen(false)}
+        />
+      ) : null}
+      {cameraOpen ? (
+        <CardCameraCapture
+          onCapture={(file) => enqueueCardFiles([file])}
+          onCancel={() => setCameraOpen(false)}
+        />
       ) : null}
       {uploadQueue[0] ? (
         <CardUploadModal
