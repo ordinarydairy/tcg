@@ -4,7 +4,7 @@ import AuthScreen from './AuthScreen'
 import FriendsScreen from './FriendsScreen'
 import HomeScreen from './HomeScreen'
 import Layout from './Layout.jsx'
-import MeetScreen from './MeetScreen.jsx'
+import RoomScreen from './RoomScreen.jsx'
 import Profile from './Profile.jsx'
 import TradeHistoryScreen from './TradeHistoryScreen.jsx'
 import TradeScreen from './TradeScreen.jsx'
@@ -29,7 +29,7 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/meet" element={<MeetScreen />} />
+        <Route path="/rooms" element={<RoomScreen />} />
         <Route path="/friends" element={<FriendsScreen />} />
         <Route path="/trades/history" element={<TradeHistoryScreen />} />
         <Route path="/trades/new" element={<TradeScreen />} />

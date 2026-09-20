@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/friends/requests/', FriendRequestView.as_view(), name='friend-request'),
     path('api/friends/<int:user_id>/', FriendDetailView.as_view(), name='friend-detail'),
     path('api/', include('cards.urls')),
+    path('api/rooms/', include('rooms.urls')),
 ]
 
 if settings.DEBUG:
