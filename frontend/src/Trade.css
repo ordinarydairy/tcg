@@ -38,15 +38,16 @@
   width: 100%;
   max-width: 110px;
   aspect-ratio: 2 / 3;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   isolation: isolate;
   border: 2px solid transparent;
-  background: var(--code-bg);
+  background: var(--card);
+  box-shadow: var(--shadow);
 }
 
 .trade-card.is-selected {
-  border-color: var(--accent);
+  border-color: var(--lime-strong);
 }
 
 .trade-card.is-disabled {
