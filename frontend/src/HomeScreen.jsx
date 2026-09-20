@@ -1,37 +1,34 @@
 import { useEffect, useState } from 'react'
-import { cardImageSrc, fetchPackStatus, openPack } from './api'
+import { cardImageSrc, donatePackCard, fetchCards, fetchPackStatus, pullPackCard } from './api'
 import './Home.css'
 
 function formatRemaining(seconds) {
   if (seconds <= 0) {
-    return 'Ready to open'
+    return 'Ready to pull'
   }
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const leftover = seconds % 60
-  if (hours > 0) {
-    return `${hours}h ${minutes}m left`
-  }
-  if (minutes > 0) {
-    return `${minutes}m ${leftover}s left`
-  }
-  return `${leftover}s left`
+  return `${seconds}s until next pull`
 }
 
 export default function HomeScreen() {
   const [pack, setPack] = useState(null)
+  const [cards, setCards] = useState([])
   const [remaining, setRemaining] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [picking, setPicking] = useState(false)
+  const [reveal, setReveal] = useState(null)
+
+  async function refreshPack() {
+    const [packData, cardData] = await Promise.all([fetchPackStatus(), fetchCards()])
+    setPack(packData)
+    setRemaining(packData.remaining_seconds)
+    setCards(cardData)
+    return packData
+  }
 
   useEffect(() => {
     let cancelled = false
-    fetchPackStatus()
-      .then((data) => {
-        if (cancelled) return
-        setPack(data)
-        setRemaining(data.remaining_seconds)
-      })
+    refreshPack()
       .catch((err) => {
         if (!cancelled) setError(err.message)
       })
@@ -50,24 +47,26 @@ export default function HomeScreen() {
     return () => clearTimeout(handle)
   }, [remaining])
 
-  const cooldown = pack?.cooldown_seconds || 7200
-  const progress = remaining <= 0 ? 1 : (cooldown - remaining) / cooldown
-  const ready = remaining <= 0 && pack?.ready !== false
+  const credits = pack?.credits ?? 0
+  const otherCount = pack?.other_count ?? 0
+  const cooldown = pack?.cooldown_seconds || 20
+  const coolingDown = remaining > 0
+  const canPull = !busy && pack != null && credits > 0 && otherCount > 0 && !coolingDown
   const pulls = pack?.last_opening?.cards || []
 
-  async function handleOpen() {
+  async function handleDonate(card) {
     setError('')
     setBusy(true)
     try {
-      const data = await openPack()
+      const data = await donatePackCard(card.id)
       setPack(data)
       setRemaining(data.remaining_seconds)
+      setCards((current) => current.filter((item) => item.id !== card.id))
+      setPicking(false)
     } catch (err) {
       setError(err.message)
       try {
-        const data = await fetchPackStatus()
-        setPack(data)
-        setRemaining(data.remaining_seconds)
+        await refreshPack()
       } catch {
         /* keep the original error */
       }
@@ -76,14 +75,54 @@ export default function HomeScreen() {
     }
   }
 
+  async function handlePull() {
+    setError('')
+    setBusy(true)
+    try {
+      const data = await pullPackCard()
+      setPack(data)
+      setRemaining(data.remaining_seconds)
+      const pulled = data.last_opening?.cards?.[0]
+      if (pulled) {
+        setReveal(pulled)
+      }
+      const collection = await fetchCards()
+      setCards(collection)
+    } catch (err) {
+      setError(err.message)
+      try {
+        await refreshPack()
+      } catch {
+        /* keep the original error */
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  let pullLabel = 'Pull from mystery pack'
+  if (busy) {
+    pullLabel = 'Working…'
+  } else if (coolingDown) {
+    pullLabel = formatRemaining(remaining)
+  } else if (credits < 1) {
+    pullLabel = 'Trade a card in first'
+  } else if (otherCount < 1) {
+    pullLabel = 'Waiting for other cards'
+  }
+
   return (
     <main className="home-page">
+      <div className="pack-credits" aria-label={`${credits} trade-in credits`}>
+        {credits}
+      </div>
+
       <section className="mystery-pack">
         <p className="eyebrow">Card pack</p>
         <h1>Mystery box</h1>
         <p className="lede">
-          Open a pack of up to 3 random cards from friends. Copies land in your collection, then the box needs 2 hours
-          to refill.
+          Trade one of your cards into the shared pack. Each trade-in gives you one pull of someone
+          else’s card.
         </p>
 
         <div className="mystery-box" aria-hidden="true">
@@ -91,37 +130,38 @@ export default function HomeScreen() {
           <div className="mystery-box-body">?</div>
         </div>
 
+        <p className="pack-count">
+          {otherCount} {otherCount === 1 ? 'card' : 'cards'} from other players
+        </p>
+
         <div className="pack-progress">
           <div className="pack-progress-copy">
             <span>{formatRemaining(remaining)}</span>
-            <span>{Math.round(progress * 100)}%</span>
+            <span>{remaining > 0 ? `${remaining}s` : `${cooldown}s ready`}</span>
           </div>
-          <progress className="pack-progress-bar" max={1} value={progress}>
-            {Math.round(progress * 100)}%
+          <progress className="pack-progress-bar" max={cooldown} value={coolingDown ? remaining : 0}>
+            {remaining}s
           </progress>
         </div>
 
         {error ? <p className="form-error">{error}</p> : null}
 
-        <button
-          type="button"
-          className="primary"
-          disabled={busy || !ready || pack == null}
-          onClick={handleOpen}
-        >
-          {busy ? 'Opening…' : ready ? 'Open mystery pack' : 'Pack cooling down'}
-        </button>
-        {pack && pack.friend_count === 0 ? (
-          <p className="pack-hint">Add friends first — packs pull from their collections.</p>
-        ) : null}
-        {pack && pack.friend_count > 0 && pack.pool_size === 0 ? (
-          <p className="pack-hint">Your friends have not uploaded cards yet.</p>
+        <div className="pack-actions">
+          <button type="button" className="ghost" disabled={busy} onClick={() => setPicking(true)}>
+            Trade in a card
+          </button>
+          <button type="button" className="primary" disabled={!canPull} onClick={handlePull}>
+            {pullLabel}
+          </button>
+        </div>
+        {cards.length === 0 ? (
+          <p className="pack-hint">Add a card from your profile before you can trade one in.</p>
         ) : null}
       </section>
 
       {pulls.length ? (
         <section className="pack-reveals">
-          <h2>Last pack</h2>
+          <h2>Last pull</h2>
           <ul className="card-grid">
             {pulls.map((card) => (
               <li key={card.id} className="blank-card">
@@ -136,6 +176,56 @@ export default function HomeScreen() {
             ))}
           </ul>
         </section>
+      ) : null}
+
+      {picking ? (
+        <div className="pack-picker-overlay">
+          <div className="pack-picker">
+            <div className="pack-picker-header">
+              <h2>Choose a card to trade in</h2>
+              <button type="button" className="ghost" onClick={() => setPicking(false)}>
+                Close
+              </button>
+            </div>
+            {cards.length === 0 ? (
+              <p className="pack-hint">You have no cards to donate right now.</p>
+            ) : (
+              <ul className="card-grid">
+                {cards.map((card) => (
+                  <li key={card.id}>
+                    <button
+                      type="button"
+                      className="blank-card pack-pick-card"
+                      disabled={busy}
+                      onClick={() => handleDonate(card)}
+                    >
+                      <div className="blank-card-art">
+                        {cardImageSrc(card.image) ? (
+                          <img src={cardImageSrc(card.image)} alt="" />
+                        ) : null}
+                      </div>
+                      <p className="blank-card-rarity">{card.rarity}</p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {reveal ? (
+        <button type="button" className="pack-reveal-overlay" onClick={() => setReveal(null)}>
+          <span className="pack-reveal-card">
+            {cardImageSrc(reveal.image) ? (
+              <img src={cardImageSrc(reveal.image)} alt={reveal.rarity} />
+            ) : null}
+            <span className="pack-reveal-meta">
+              {reveal.rarity}
+              {reveal.from_friend ? ` · from ${reveal.from_friend}` : ''}
+            </span>
+          </span>
+        </button>
       ) : null}
     </main>
   )

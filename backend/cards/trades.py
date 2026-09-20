@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from accounts.friends import accepted_friend_ids
 from accounts.serializers import PlayerSerializer
 
-from .models import Card, Trade, TradeItem
+from .models import Card, MysteryPackEntry, Trade, TradeItem
 from .views import card_payload
 
 User = get_user_model()
@@ -75,6 +75,8 @@ def set_offered_cards(trade, user, card_ids):
         return 'You can only offer cards from your collection.'
     if any(card.id in locked for card in cards):
         return 'One of those cards is already in another trade.'
+    if MysteryPackEntry.objects.filter(card_id__in=card_ids).exists():
+        return 'One of those cards is in the mystery pack.'
     TradeItem.objects.filter(trade=trade, offered_by=user).delete()
     TradeItem.objects.bulk_create([
         TradeItem(trade=trade, card=card, offered_by=user)
