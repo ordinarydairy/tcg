@@ -54,6 +54,14 @@ class Card(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    REASON_FIELDS = (
+        'photo_quality_reason',
+        'location_significance_reason',
+        'occasion_reason',
+        'uniqueness_reason',
+        'memory_story_reason',
+    )
+
     def save(self, *args, **kwargs):
         if not self.creator_id and self.owner_id:
             self.creator_id = self.owner_id
@@ -61,6 +69,9 @@ class Card(models.Model):
             uploaded_type = getattr(self.image, 'content_type', None)
             guessed = mimetypes.guess_type(getattr(self.image, 'name', '') or '')[0]
             self.image_content_type = (uploaded_type or guessed or 'application/octet-stream')[:100]
+        for name in self.REASON_FIELDS:
+            if getattr(self, name) is None:
+                setattr(self, name, '')
         super().save(*args, **kwargs)
 
     def __str__(self):

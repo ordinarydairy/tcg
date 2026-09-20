@@ -114,6 +114,53 @@ class CardOwnershipTests(TestCase):
         response = self.client.post('/api/grade-photo/', {'image': png_file()})
         self.assertEqual(response.status_code, 403)
 
+    def test_null_score_reasons_save_as_empty_strings(self):
+        card = Card.objects.create(
+            owner=self.owner,
+            image=png_file('null-reasons.png'),
+            story='lampworking :)',
+            photo_quality=5,
+            photo_quality_reason=None,
+            location_significance=1,
+            location_significance_reason=None,
+            occasion=3,
+            occasion_reason=None,
+            uniqueness=5,
+            uniqueness_reason=None,
+            memory_story=2,
+            memory_story_reason=None,
+            overall_score=32,
+            rarity='Common',
+        )
+        card.refresh_from_db()
+        self.assertEqual(card.location_significance_reason, '')
+        self.assertEqual(card.photo_quality_reason, '')
+        self.assertEqual(card.occasion_reason, '')
+        self.assertEqual(card.uniqueness_reason, '')
+        self.assertEqual(card.memory_story_reason, '')
+
+
+class PhotoScoresTests(TestCase):
+    def test_null_reasons_become_empty_strings(self):
+        from cards.views import PhotoScores
+
+        scores = PhotoScores.model_validate(
+            {
+                'photo_quality': 5,
+                'photo_quality_reason': None,
+                'location_significance': 1,
+                'location_significance_reason': None,
+                'occasion': 3,
+                'occasion_reason': None,
+                'uniqueness': 5,
+                'uniqueness_reason': None,
+                'memory_story': 2,
+                'memory_story_reason': None,
+            }
+        )
+        self.assertEqual(scores.location_significance_reason, '')
+        self.assertEqual(scores.photo_quality_reason, '')
+
 
 class MysteryPackTests(TestCase):
     def setUp(self):
