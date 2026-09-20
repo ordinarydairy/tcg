@@ -17,6 +17,7 @@ export default function FriendsScreen() {
   const [results, setResults] = useState([])
   const [friends, setFriends] = useState([])
   const [incoming, setIncoming] = useState([])
+  const [outgoing, setOutgoing] = useState([])
   const [suggestions, setSuggestions] = useState([])
   const [trades, setTrades] = useState([])
   const [tradeHistory, setTradeHistory] = useState([])
@@ -38,6 +39,7 @@ export default function FriendsScreen() {
     ])
     setFriends(list.friends)
     setIncoming(list.incoming)
+    setOutgoing(list.outgoing || [])
     setSuggestions(suggested.users)
     applyTrades(openTrades)
   }
@@ -54,6 +56,7 @@ export default function FriendsScreen() {
         if (cancelled) return
         setFriends(list.friends)
         setIncoming(list.incoming)
+        setOutgoing(list.outgoing || [])
         setSuggestions(suggested.users)
         setTrades(openTrades.open || openTrades.trades.filter((item) => item.status === 'pending'))
         setTradeHistory(openTrades.history || openTrades.trades.filter((item) => item.status !== 'pending'))
@@ -238,6 +241,21 @@ export default function FriendsScreen() {
           <p className="friends-empty">No other players to suggest yet.</p>
         )}
       </section>
+
+      {outgoing.length ? (
+        <section className="friends-section">
+          <h2>Outgoing requests</h2>
+          <ul className="player-list">
+            {outgoing.map((player) => (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                actionLabel="Requested"
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {incoming.length ? (
         <section className="friends-section">

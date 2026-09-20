@@ -53,31 +53,3 @@ export async function cropImageToFile(imageSrc, pixelCrop, fileName = 'card.jpg'
   return new File([blob], fileName, { type: 'image/jpeg' })
 }
 
-export function paintCropPreview(image, pixelCrop, canvas) {
-  const context = canvas.getContext('2d')
-  if (!context || !pixelCrop) {
-    return
-  }
-
-  const width = Math.max(1, Math.round(pixelCrop.width))
-  const height = Math.max(1, Math.round(pixelCrop.height))
-  const sourceX = Math.max(0, Math.round(pixelCrop.x))
-  const sourceY = Math.max(0, Math.round(pixelCrop.y))
-  const sourceWidth = Math.min(width, image.naturalWidth - sourceX)
-  const sourceHeight = Math.min(height, image.naturalHeight - sourceY)
-
-  canvas.width = sourceWidth
-  canvas.height = sourceHeight
-  context.clearRect(0, 0, sourceWidth, sourceHeight)
-  context.drawImage(
-    image,
-    sourceX,
-    sourceY,
-    sourceWidth,
-    sourceHeight,
-    0,
-    0,
-    sourceWidth,
-    sourceHeight,
-  )
-}

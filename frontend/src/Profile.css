@@ -196,13 +196,16 @@
 
 .profile-photo-button {
   cursor: pointer;
+  flex: 0 0 auto;
   font: inherit;
   font-size: 16px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: 0;
   border-radius: var(--radius-pill);
   color: var(--text-h);
   background: var(--pink);
+  box-shadow: 4px 4px 0 #d36b98;
+  white-space: nowrap;
 }
 
 .profile-photo-input {
@@ -243,7 +246,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -270,12 +273,12 @@
   background: rgba(8, 6, 13, 0.55);
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
 .card-upload-dialog {
   width: min(760px, 100%);
-  max-height: calc(100svh - 40px);
+  max-height: calc(100svh - 40px - env(safe-area-inset-bottom, 0px));
   overflow: auto;
   background: var(--card);
   border: 0;
@@ -286,44 +289,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.card-crop-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 16px;
-  align-items: start;
-}
-
-@media (max-width: 640px) {
-  .card-crop-layout {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-}
-
-.card-crop-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-crop-preview-label {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.card-preview-card {
-  width: 148px;
-}
-
-.card-preview-card canvas {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
 }
 
 .card-upload-dialog h2 {
@@ -371,6 +336,32 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 10px;
+  background: var(--card);
+}
+
+.card-upload-cancel {
+  margin-right: auto;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #8a8f98;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.card-upload-cancel:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .card-upload-submit {
@@ -389,13 +380,6 @@
   gap: 10px;
 }
 
-@media (min-width: 720px) {
-  .profile .card-grid {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 120px));
-    gap: 12px;
-  }
-}
-
 .profile .blank-card {
   position: relative;
   display: block;
@@ -409,6 +393,16 @@
   border: 3px solid var(--accent);
   border-radius: 18px;
   background: #1b3558;
+}
+
+.profile .blank-card.is-empty {
+  background: transparent;
+  border: 3px dashed #8aa0c8;
+}
+
+.profile .blank-card.is-empty .blank-card-art,
+.profile .blank-card.is-empty .blank-card-title {
+  display: none;
 }
 
 .profile .blank-card-art {

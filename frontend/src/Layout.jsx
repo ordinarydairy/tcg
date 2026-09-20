@@ -153,20 +153,27 @@ function Layout() {
 
   return (
     <AddCardProvider>
-      <div className="app-shell">
-        <div className="sky-stars" aria-hidden="true">
-          <span className="sky-star s1" />
-          <span className="sky-star s2" />
-          <span className="sky-star s3" />
-          <span className="sky-star s4" />
-          <span className="sky-star s5" />
-        </div>
-        <div className="app-content">
-          <Outlet />
-        </div>
-        <TabBar pathname={pathname} hasAlerts={hasAlerts} />
-      </div>
+      <AppShell pathname={pathname} hasAlerts={hasAlerts} />
     </AddCardProvider>
+  )
+}
+
+function AppShell({ pathname, hasAlerts }) {
+  const { overlayOpen } = useAddCard()
+  return (
+    <div className={`app-shell${overlayOpen ? ' has-card-overlay' : ''}`}>
+      <div className="sky-stars" aria-hidden="true">
+        <span className="sky-star s1" />
+        <span className="sky-star s2" />
+        <span className="sky-star s3" />
+        <span className="sky-star s4" />
+        <span className="sky-star s5" />
+      </div>
+      <div className="app-content">
+        <Outlet />
+      </div>
+      <TabBar pathname={pathname} hasAlerts={hasAlerts} />
+    </div>
   )
 }
 

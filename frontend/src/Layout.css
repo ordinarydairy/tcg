@@ -171,6 +171,11 @@
   color: var(--text-h);
 }
 
+.app-shell.has-card-overlay .tab-bar {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .tab-fab-slot {
   position: relative;
   z-index: 2;

@@ -51,6 +51,10 @@ class FriendsListView(APIView):
             to_user=user,
             status=Friendship.PENDING,
         ).select_related('from_user')
+        outgoing = Friendship.objects.filter(
+            from_user=user,
+            status=Friendship.PENDING,
+        ).select_related('to_user')
         friends = [
             link.to_user if link.from_user_id == user.id else link.from_user
             for link in accepted
@@ -59,6 +63,11 @@ class FriendsListView(APIView):
             'friends': PlayerSerializer(friends, many=True, context={'viewer': user, 'request': request}).data,
             'incoming': PlayerSerializer(
                 [link.from_user for link in incoming],
+                many=True,
+                context={'viewer': user, 'request': request},
+            ).data,
+            'outgoing': PlayerSerializer(
+                [link.to_user for link in outgoing],
                 many=True,
                 context={'viewer': user, 'request': request},
             ).data,

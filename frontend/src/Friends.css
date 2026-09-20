@@ -150,14 +150,20 @@
   white-space: nowrap;
 }
 
+.ghost.player-action-completed,
+.ghost.player-action-cancelled {
+  box-shadow: none;
+  font-weight: 800;
+}
+
 .ghost.player-action-completed {
-  background: #4d7dff;
-  color: #fff;
-  box-shadow: 4px 4px 0 #2f5ad1;
+  background: rgba(77, 125, 255, 0.12);
+  color: #4d7dff;
+  border: 2px solid #4d7dff;
 }
 
 .ghost.player-action-cancelled {
-  background: #ef5b5b;
-  color: #fff;
-  box-shadow: 4px 4px 0 #c43d3d;
+  background: rgba(239, 91, 91, 0.12);
+  color: #c94a4a;
+  border: 2px solid #ef5b5b;
 }
