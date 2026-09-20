@@ -160,6 +160,15 @@
   padding: 10px 16px;
 }
 
+.profile-trade-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.profile-trade-actions .profile-friend-button {
+  margin-top: 8px;
 .card-source-dialog {
   width: min(420px, 100%);
 }

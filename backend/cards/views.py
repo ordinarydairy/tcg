@@ -49,10 +49,20 @@ class PhotoScores(BaseModel):
     memory_story: int = Field(ge=0, le=10)
 
 
+def card_creator(card):
+    pull = next(iter(card.pack_pulls.all()), None)
+    if pull is not None:
+        return pull.from_user
+    return card.owner
+
+
 def card_payload(card):
+    creator = card_creator(card)
     return {
         'id': card.id,
         'image': f'/api/cards/{card.id}/image/',
+        'creator_display_name': creator.display_name,
+        'creator_tag': creator.tag,
         'story': card.story,
         'scores': {
             'photo_quality': card.photo_quality,
@@ -196,7 +206,12 @@ def get_cards(request):
         return Response({'error': 'Invalid user_id.'}, status=status.HTTP_400_BAD_REQUEST)
     if not can_view_player_cards(request.user, owner_id):
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-    cards = Card.objects.filter(owner_id=owner_id).order_by('-created_at')
+    cards = (
+        Card.objects.filter(owner_id=owner_id)
+        .select_related('owner')
+        .prefetch_related('pack_pulls__from_user')
+        .order_by('-created_at')
+    )
     return Response([card_payload(card) for card in cards])
 
 
@@ -253,7 +268,11 @@ def pack_card_payload(pull):
 
 
 def latest_opening(user):
-    return PackOpening.objects.filter(user=user).prefetch_related('pulls__card', 'pulls__from_user').first()
+    return PackOpening.objects.filter(user=user).prefetch_related(
+        'pulls__card__owner',
+        'pulls__card__pack_pulls__from_user',
+        'pulls__from_user',
+    ).first()
 
 
 def pack_status_payload(user):

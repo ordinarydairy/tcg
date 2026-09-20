@@ -495,14 +495,25 @@ function Profile() {
             <p className="profile-bio-text">{player?.bio?.trim() ? player.bio : 'No bio yet.'}</p>
             {error ? <p className="form-error">{error}</p> : null}
             {player?.friendship_status && player.friendship_status !== 'self' ? (
-              <button
-                type="button"
-                className={player.friendship_status === 'friends' ? 'ghost' : 'primary profile-friend-button'}
-                disabled={busy || player.friendship_status === 'pending_sent'}
-                onClick={handleFriendship}
-              >
-                {busy ? 'Please wait…' : actionLabel}
-              </button>
+              <div className="profile-trade-actions">
+                {player.friendship_status === 'friends' ? (
+                  <button
+                    type="button"
+                    className="primary profile-friend-button"
+                    onClick={() => navigate(`/trades/new?userId=${player.id}`)}
+                  >
+                    Trade
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className={player.friendship_status === 'friends' ? 'ghost' : 'primary profile-friend-button'}
+                  disabled={busy || player.friendship_status === 'pending_sent'}
+                  onClick={handleFriendship}
+                >
+                  {busy ? 'Please wait…' : actionLabel}
+                </button>
+              </div>
             ) : null}
           </>
         )}
@@ -609,7 +620,10 @@ function Profile() {
                       </p>
 
                       <p className="card-back-username">
-                        @{user?.display_name || user?.username || 'user'}
+                        {selectedCard.creator_display_name || player?.display_name || 'Player'}
+                        {selectedCard.creator_tag || player?.tag
+                          ? ` #${selectedCard.creator_tag || player.tag}`
+                          : ''}
                       </p>
 
                       {selectedCard.story?.trim() ? (

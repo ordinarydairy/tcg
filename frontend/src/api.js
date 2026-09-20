@@ -146,3 +146,33 @@ export function fetchPackStatus() {
 export function openPack() {
   return request('/api/pack/open/', { method: 'POST' })
 }
+
+export function fetchTrades() {
+  return request('/api/trades/')
+}
+
+export function createTrade(userId, cardIds = []) {
+  return request('/api/trades/', {
+    method: 'POST',
+    body: { user_id: userId, card_ids: cardIds },
+  })
+}
+
+export function fetchTrade(tradeId) {
+  return request(`/api/trades/${tradeId}/`)
+}
+
+export function updateTradeCards(tradeId, cardIds) {
+  return request(`/api/trades/${tradeId}/`, {
+    method: 'PATCH',
+    body: { card_ids: cardIds },
+  })
+}
+
+export function acceptTrade(tradeId) {
+  return request(`/api/trades/${tradeId}/accept/`, { method: 'POST' })
+}
+
+export function cancelTrade(tradeId) {
+  return request(`/api/trades/${tradeId}/cancel/`, { method: 'POST' })
+}
