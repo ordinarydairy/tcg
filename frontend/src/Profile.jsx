@@ -10,13 +10,13 @@ import { fetchPlayer, removeFriend, sendFriendRequest } from './api'
 import { friendshipActionLabel } from './PlayerRow'
 import './Profile.css'
 
-const SLOT_COUNT = 10
+const SLOT_COUNT = 9
 
 function ProfileCardTile({ card, onOpen }) {
   const imageSrc = cardImageSrc(card.image)
   const isSaved = Boolean(imageSrc)
   return (
-    <li className="blank-card">
+    <li className={`blank-card${isSaved ? '' : ' is-empty'}`}>
       {isSaved ? (
         <button
           type="button"
@@ -340,7 +340,7 @@ function Profile() {
   const actionLabel =
     player?.friendship_status === 'friends' ? 'Remove friend' : friendshipActionLabel(player?.friendship_status)
   const cardSlots = [
-    ...cards,
+    ...cards.slice(0, SLOT_COUNT),
     ...Array.from(
       { length: Math.max(0, SLOT_COUNT - cards.length) },
       (_, index) => ({ id: `empty-${index}` }),

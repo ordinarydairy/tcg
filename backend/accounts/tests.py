@@ -211,6 +211,10 @@ class FriendshipApiTests(TestCase):
         self.assertEqual(send.status_code, 201)
         self.assertEqual(send.json()['friendship_status'], 'pending_sent')
 
+        outgoing = self.client.get(reverse('friends-list'))
+        self.assertEqual(outgoing.json()['outgoing'][0]['display_name'], 'Sam')
+        self.assertEqual(outgoing.json()['incoming'], [])
+
         self.client.force_login(self.sam)
         incoming = self.client.get(reverse('friends-list'))
         self.assertEqual(incoming.json()['incoming'][0]['display_name'], 'Claire')
