@@ -32,11 +32,12 @@
 }
 
 .mystery-pack {
-  background: var(--social-bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--card);
+  border: 0;
+  border-radius: var(--radius-card);
   padding: 28px 24px;
   text-align: left;
+  box-shadow: var(--shadow);
 }
 
 .mystery-pack h1 {
@@ -57,8 +58,8 @@
   right: 8px;
   top: 0;
   height: 28px;
-  border-radius: 6px 6px 2px 2px;
-  background: #e56a2a;
+  border-radius: 14px 14px 6px 6px;
+  background: var(--accent);
   box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12);
 }
 
@@ -68,8 +69,8 @@
   right: 16px;
   top: 22px;
   bottom: 0;
-  border-radius: 4px 4px 10px 10px;
-  background: linear-gradient(180deg, #f4b183 0%, #e56a2a 100%);
+  border-radius: 10px 10px 16px 16px;
+  background: linear-gradient(180deg, var(--pink) 0%, var(--accent) 100%);
   color: #fff;
   display: grid;
   place-items: center;
@@ -106,12 +107,12 @@
 }
 
 .pack-progress-bar::-webkit-progress-value {
-  background: #e56a2a;
+  background: linear-gradient(90deg, var(--lime) 0%, var(--accent) 100%);
   border-radius: 999px;
 }
 
 .pack-progress-bar::-moz-progress-bar {
-  background: #e56a2a;
+  background: linear-gradient(90deg, var(--lime) 0%, var(--accent) 100%);
   border-radius: 999px;
 }
 
@@ -153,9 +154,16 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 120px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: start;
-  gap: 12px;
+  gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .home-page .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 120px));
+    gap: 12px;
+  }
 }
 
 .home-page .blank-card {
@@ -168,9 +176,9 @@
   padding: 0;
   overflow: hidden;
   isolation: isolate;
-  border: 3px solid #77777f;
-  border-radius: 16px;
-  background: #25252a;
+  border: 3px solid var(--accent);
+  border-radius: 18px;
+  background: #1b3558;
 }
 
 .home-page .blank-card-art {

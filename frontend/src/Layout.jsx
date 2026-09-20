@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { fetchFriends, fetchTrades } from './api'
 import logo from './assets/logo.svg'
 import './Layout.css'
+
+const TABS = [
+  { to: '/', end: true, label: 'Home', Icon: HomeIcon },
+  { to: '/friends', label: 'Friends', Icon: FriendsIcon },
+  { to: '/profile', label: 'Profile', Icon: ProfileIcon },
+]
 
 function HomeIcon() {
   return <img className="tab-icon tab-logo" src={logo} alt="" width="28" height="28" />
@@ -24,7 +30,15 @@ function ProfileIcon() {
   )
 }
 
+function activeTabIndex(pathname) {
+  if (pathname.startsWith('/friends') || pathname.startsWith('/trades')) return 1
+  if (pathname.startsWith('/profile') || pathname.startsWith('/users')) return 2
+  return 0
+}
+
 function Layout() {
+  const { pathname } = useLocation()
+  const index = activeTabIndex(pathname)
   const [hasAlerts, setHasAlerts] = useState(false)
 
   useEffect(() => {
@@ -50,32 +64,41 @@ function Layout() {
 
   return (
     <div className="app-shell">
+      <div className="sky-stars" aria-hidden="true">
+        <span className="sky-star s1" />
+        <span className="sky-star s2" />
+        <span className="sky-star s3" />
+        <span className="sky-star s4" />
+        <span className="sky-star s5" />
+      </div>
       <div className="app-content">
         <Outlet />
       </div>
       <nav className="tab-bar" aria-label="Main">
-        <NavLink to="/" end className="tab">
-          <HomeIcon />
-          <span className="tab-label">Home</span>
-          <span className="tab-dot" aria-hidden="true" />
-        </NavLink>
-        <NavLink
-          to="/friends"
-          className="tab"
-          aria-label={hasAlerts ? 'Friends, new requests' : 'Friends'}
+        <span
+          className="tab-slider"
+          style={{ transform: `translateX(${index * 100}%)` }}
+          aria-hidden="true"
         >
-          <span className="tab-icon-wrap">
-            <FriendsIcon />
-            {hasAlerts ? <span className="tab-badge" aria-hidden="true" /> : null}
-          </span>
-          <span className="tab-label">Friends</span>
-          <span className="tab-dot" aria-hidden="true" />
-        </NavLink>
-        <NavLink to="/profile" className="tab">
-          <ProfileIcon />
-          <span className="tab-label">Profile</span>
-          <span className="tab-dot" aria-hidden="true" />
-        </NavLink>
+          <span className="tab-slider-circle" />
+        </span>
+        {TABS.map(({ to, end, label, Icon }, tabIndex) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={() => (tabIndex === index ? 'tab active' : 'tab')}
+            aria-label={to === '/friends' && hasAlerts ? 'Friends, new requests' : undefined}
+          >
+            <span className="tab-glyph">
+              <span className="tab-icon-wrap">
+                <Icon />
+                {to === '/friends' && hasAlerts ? <span className="tab-badge" aria-hidden="true" /> : null}
+              </span>
+            </span>
+            <span className="tab-label">{label}</span>
+          </NavLink>
+        ))}
       </nav>
     </div>
   )

@@ -4,8 +4,8 @@
   "description": "Sign in to play",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#16171d",
-  "theme_color": "#aa3bff",
+  "background_color": "#e6f6ff",
+  "theme_color": "#4d7dff",
   "icons": [
     {
       "src": "/pwa-192.png",

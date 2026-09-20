@@ -7,6 +7,8 @@
   justify-content: center;
   padding: 32px 20px;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .auth-card,
@@ -18,10 +20,11 @@
 
 .auth-card,
 .home-card {
-  background: var(--social-bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: var(--card);
+  border: 0;
+  border-radius: var(--radius-card);
   padding: 28px 24px;
+  box-shadow: var(--shadow);
 }
 
 .auth-logo {
@@ -35,8 +38,9 @@
 .eyebrow {
   margin: 0 0 8px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   font-size: 12px;
+  font-weight: 800;
   color: var(--accent);
 }
 
@@ -62,15 +66,17 @@
 .primary,
 .ghost {
   font: inherit;
+  font-weight: 800;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
 }
 
 .mode-toggle button,
 .ghost {
   color: var(--text-h);
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--lime);
+  border: 0;
+  box-shadow: var(--shadow-btn);
   padding: 10px 12px;
 }
 
@@ -78,7 +84,8 @@
 .primary {
   color: #fff;
   background: var(--accent);
-  border: 1px solid transparent;
+  border: 0;
+  box-shadow: var(--shadow-btn);
 }
 
 .primary,
@@ -115,10 +122,10 @@ input[type='password'],
 input[type='text'] {
   font: inherit;
   color: var(--text-h);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: var(--code-bg);
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  padding: 12px 14px;
   width: 100%;
 }
 
@@ -156,13 +163,14 @@ input[type='text'] {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border: 1px dashed var(--accent-border);
-  background: var(--accent-bg);
+  border: 2px dashed var(--accent-border);
+  background: var(--pink);
   display: grid;
   place-items: center;
   overflow: hidden;
   font-size: 13px;
-  color: var(--accent);
+  font-weight: 800;
+  color: var(--text-h);
 }
 
 .photo-preview img {
@@ -203,14 +211,14 @@ input[type='file'] {
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--accent-border);
+  border: 3px solid var(--border);
 }
 
 .avatar.fallback {
   display: grid;
   place-items: center;
-  background: var(--accent-bg);
-  color: var(--accent);
+  background: var(--pink);
+  color: var(--text-h);
   font-size: 28px;
 }
 
