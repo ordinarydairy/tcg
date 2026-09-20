@@ -143,8 +143,15 @@ export function fetchPackStatus() {
   return request('/api/pack/')
 }
 
-export function openPack() {
-  return request('/api/pack/open/', { method: 'POST' })
+export function donatePackCard(cardId) {
+  return request('/api/pack/donate/', {
+    method: 'POST',
+    body: { card_id: cardId },
+  })
+}
+
+export function pullPackCard() {
+  return request('/api/pack/pull/', { method: 'POST' })
 }
 
 export function fetchTrades() {

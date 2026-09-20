@@ -44,6 +44,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     tag = models.CharField(max_length=8, unique=True, default=generate_player_tag, editable=False)
     profile_photo = models.ImageField(upload_to=profile_upload_to, blank=True)
     bio = models.TextField(blank=True, max_length=500)
+    pack_credits = models.PositiveIntegerField(default=0)
+    last_pack_pull_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

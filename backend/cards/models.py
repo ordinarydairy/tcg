@@ -130,3 +130,20 @@ class TradeItem(models.Model):
 
     class Meta:
         unique_together = ('trade', 'card')
+
+
+class MysteryPackEntry(models.Model):
+    donor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pack_donations',
+    )
+    card = models.OneToOneField(
+        Card,
+        on_delete=models.CASCADE,
+        related_name='pack_entry',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']

@@ -8,7 +8,7 @@ from django.utils import timezone
 from PIL import Image
 
 from accounts.models import Friendship
-from cards.models import PackOpening
+from cards.models import MysteryPackEntry
 from .models import Card
 
 User = get_user_model()
@@ -106,36 +106,74 @@ class MysteryPackTests(TestCase):
         )
         self.client.force_login(self.claire)
 
-    def test_pack_needs_friends_with_cards(self):
-        empty = self.client.post('/api/pack/open/')
-        self.assertEqual(empty.status_code, 400)
+    def test_donate_then_pull_moves_another_players_card(self):
+        claire_card = make_card(self.claire, name='claire.png')
+        sam_card = make_card(self.sam, name='sam.png')
+        self.client.force_login(self.sam)
+        sam_donate = self.client.post('/api/pack/donate/', {'card_id': sam_card.id}, content_type='application/json')
+        self.assertEqual(sam_donate.status_code, 201)
+        self.assertEqual(sam_donate.json()['credits'], 1)
+        self.assertEqual(sam_donate.json()['other_count'], 0)
+        self.assertTrue(Card.objects.filter(pk=sam_card.id).exists())
+        self.client.force_login(self.sam)
+        sam_collection = self.client.get('/api/cards/')
+        self.assertEqual(sam_collection.json(), [])
 
-        Friendship.objects.create(from_user=self.claire, to_user=self.sam, status=Friendship.ACCEPTED)
-        no_cards = self.client.post('/api/pack/open/')
-        self.assertEqual(no_cards.status_code, 400)
+        self.client.force_login(self.claire)
+        status = self.client.get('/api/pack/')
+        self.assertEqual(status.json()['other_count'], 1)
+        self.assertEqual(status.json()['credits'], 0)
 
-        make_card(self.sam)
-        opened = self.client.post('/api/pack/open/')
-        self.assertEqual(opened.status_code, 201)
-        cards = opened.json()['last_opening']['cards']
+        no_credit = self.client.post('/api/pack/pull/')
+        self.assertEqual(no_credit.status_code, 400)
+
+        donated = self.client.post('/api/pack/donate/', {'card_id': claire_card.id}, content_type='application/json')
+        self.assertEqual(donated.status_code, 201)
+        self.assertEqual(donated.json()['credits'], 1)
+        self.assertEqual(donated.json()['other_count'], 1)
+        self.assertTrue(Card.objects.filter(pk=claire_card.id).exists())
+        hidden = self.client.get('/api/cards/')
+        self.assertEqual(hidden.json(), [])
+
+        pulled = self.client.post('/api/pack/pull/')
+        self.assertEqual(pulled.status_code, 201)
+        body = pulled.json()
+        self.assertEqual(body['credits'], 0)
+        self.assertEqual(body['other_count'], 0)
+        self.assertGreater(body['remaining_seconds'], 0)
+        self.assertLessEqual(body['remaining_seconds'], 20)
+        cards = body['last_opening']['cards']
         self.assertEqual(len(cards), 1)
+        self.assertEqual(cards[0]['id'], sam_card.id)
         self.assertEqual(cards[0]['from_friend'], 'Sam')
         self.assertEqual(cards[0]['creator_display_name'], 'Sam')
         self.assertEqual(cards[0]['creator_tag'], self.sam.tag)
-        self.assertEqual(Card.objects.filter(owner=self.claire).count(), 1)
-        copied = self.client.get('/api/cards/')
-        self.assertEqual(copied.json()[0]['creator_display_name'], 'Sam')
-        self.assertEqual(copied.json()[0]['creator_tag'], self.sam.tag)
+        sam_card.refresh_from_db()
+        self.assertEqual(sam_card.owner_id, self.claire.id)
+        self.assertEqual(Card.objects.filter(owner=self.claire, pack_entry__isnull=True).count(), 1)
+        self.assertEqual(MysteryPackEntry.objects.count(), 1)
+        self.assertTrue(MysteryPackEntry.objects.filter(card=claire_card).exists())
+        listing = self.client.get('/api/cards/')
+        self.assertEqual([item['id'] for item in listing.json()], [sam_card.id])
 
-        blocked = self.client.post('/api/pack/open/')
+        blocked = self.client.post('/api/pack/pull/')
         self.assertEqual(blocked.status_code, 429)
-        self.assertFalse(blocked.json()['ready'])
 
-        PackOpening.objects.filter(user=self.claire).update(
-            created_at=timezone.now() - timedelta(hours=3),
+        still_donate = make_card(self.claire, name='extra.png')
+        during_cooldown = self.client.post(
+            '/api/pack/donate/',
+            {'card_id': still_donate.id},
+            content_type='application/json',
         )
-        again = self.client.post('/api/pack/open/')
-        self.assertEqual(again.status_code, 201)
+        self.assertEqual(during_cooldown.status_code, 201)
+        self.assertEqual(during_cooldown.json()['credits'], 1)
+        self.assertGreater(during_cooldown.json()['remaining_seconds'], 0)
+
+        self.claire.refresh_from_db()
+        self.claire.last_pack_pull_at = timezone.now() - timedelta(seconds=21)
+        self.claire.save(update_fields=['last_pack_pull_at'])
+        empty_others = self.client.post('/api/pack/pull/')
+        self.assertEqual(empty_others.status_code, 400)
 
 
 class TradeTests(TestCase):

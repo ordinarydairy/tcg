@@ -4,7 +4,7 @@ import random
 from datetime import timedelta
 from pathlib import Path
 
-from django.core.files.base import ContentFile
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -19,9 +19,9 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from accounts.friends import accepted_friend_ids, can_view_player_cards
+from accounts.friends import can_view_player_cards
 
-from .models import Card, PackOpening, PackPull
+from .models import Card, MysteryPackEntry, PackOpening, PackPull, Trade, TradeItem
 
 ENV_PATHS = (
     Path(__file__).resolve().parent.parent / '.env',
@@ -205,7 +205,7 @@ def get_cards(request):
     if not can_view_player_cards(request.user, owner_id):
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
     cards = (
-        Card.objects.filter(owner_id=owner_id)
+        Card.objects.filter(owner_id=owner_id, pack_entry__isnull=True)
         .select_related('owner', 'creator')
         .order_by('-created_at')
     )
@@ -226,37 +226,7 @@ def card_image(request, card_id):
     return FileResponse(image_file, content_type=content_type)
 
 
-PACK_COOLDOWN = timedelta(hours=2)
-PACK_SIZE = 3
-
-
-def stored_card_image(card):
-    try:
-        return bool(card.image) and card.image.storage.exists(card.image.name)
-    except Exception:
-        return False
-
-
-def copy_friend_card(original, new_owner):
-    try:
-        with original.image.open('rb') as image_file:
-            data = image_file.read()
-    except FileNotFoundError:
-        return None
-    card = Card(
-        owner=new_owner,
-        creator=original.creator or original.owner,
-        story=original.story,
-        photo_quality=original.photo_quality,
-        location_significance=original.location_significance,
-        occasion=original.occasion,
-        uniqueness=original.uniqueness,
-        memory_story=original.memory_story,
-        overall_score=original.overall_score,
-        rarity=original.rarity,
-    )
-    card.image.save(Path(original.image.name).name, ContentFile(data), save=True)
-    return card
+PACK_COOLDOWN = timedelta(seconds=20)
 
 
 def pack_card_payload(pull):
@@ -273,24 +243,29 @@ def latest_opening(user):
     ).first()
 
 
+def pack_remaining_seconds(user):
+    if not user.last_pack_pull_at:
+        return 0
+    elapsed = timezone.now() - user.last_pack_pull_at
+    return max(0, int((PACK_COOLDOWN - elapsed).total_seconds()))
+
+
 def pack_status_payload(user):
-    friends = accepted_friend_ids(user)
-    friend_cards = list(Card.objects.filter(owner_id__in=friends)) if friends else []
-    pool_size = sum(1 for card in friend_cards if stored_card_image(card))
-    opening = latest_opening(user)
-    remaining = 0
-    if opening:
-        elapsed = timezone.now() - opening.created_at
-        remaining = max(0, int((PACK_COOLDOWN - elapsed).total_seconds()))
+    other_count = MysteryPackEntry.objects.exclude(donor=user).count()
+    own_count = MysteryPackEntry.objects.filter(donor=user).count()
+    remaining = pack_remaining_seconds(user)
     cooldown_seconds = int(PACK_COOLDOWN.total_seconds())
     progress = 1 if remaining == 0 else (cooldown_seconds - remaining) / cooldown_seconds
+    opening = latest_opening(user)
+    credits = user.pack_credits
     return {
-        'ready': remaining == 0,
+        'ready': remaining == 0 and credits > 0 and other_count > 0,
+        'credits': credits,
+        'other_count': other_count,
+        'own_count': own_count,
         'cooldown_seconds': cooldown_seconds,
         'remaining_seconds': remaining,
         'progress': progress,
-        'friend_count': len(friends),
-        'pool_size': pool_size,
         'last_opening': None
         if opening is None
         else {
@@ -306,52 +281,103 @@ def pack_status(request):
     return Response(pack_status_payload(request.user))
 
 
+def donate_error(user, message, http_status):
+    return Response({**pack_status_payload(user), 'error': message}, status=http_status)
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def open_pack(request):
-    current = pack_status_payload(request.user)
-    if not current['ready']:
-        return Response(
-            {**current, 'error': 'Mystery pack is on cooldown. Check back in a couple of hours.'},
-            status=status.HTTP_429_TOO_MANY_REQUESTS,
-        )
-    if current['friend_count'] == 0:
-        return Response(
-            {**current, 'error': 'Add friends before you can open a mystery pack.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if current['pool_size'] == 0:
-        return Response(
-            {**current, 'error': 'Your friends have not uploaded any cards yet.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+def donate_pack_card(request):
+    card_id = request.data.get('card_id')
+    if card_id is None:
+        return donate_error(request.user, 'card_id is required.', status.HTTP_400_BAD_REQUEST)
+    try:
+        card_id = int(card_id)
+    except (TypeError, ValueError):
+        return donate_error(request.user, 'card_id must be a number.', status.HTTP_400_BAD_REQUEST)
 
-    readable = [
-        card
-        for card in Card.objects.filter(owner_id__in=accepted_friend_ids(request.user)).select_related('owner')
-        if stored_card_image(card)
-    ]
-    random.shuffle(readable)
-    sources = readable[:PACK_SIZE]
-    if not sources:
-        return Response(
-            {**current, 'error': 'Your friends have not uploaded any cards yet.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    copies = []
     with transaction.atomic():
-        opening = PackOpening.objects.create(user=request.user)
-        for original in sources:
-            copy = copy_friend_card(original, request.user)
-            if copy is None:
-                continue
-            PackPull.objects.create(opening=opening, card=copy, from_user=original.owner)
-            copies.append(copy)
-        if not copies:
-            opening.delete()
-            return Response(
-                {**current, 'error': 'Friend cards could not be read. Ask them to re-upload after this update.'},
-                status=status.HTTP_400_BAD_REQUEST,
+        card = (
+            Card.objects.select_for_update()
+            .filter(pk=card_id, owner=request.user)
+            .first()
+        )
+        if card is None:
+            return donate_error(request.user, 'That card is not in your collection.', status.HTTP_404_NOT_FOUND)
+        if TradeItem.objects.filter(trade__status=Trade.PENDING, card_id=card.id).exists():
+            return donate_error(
+                request.user,
+                'That card is currently in a trade.',
+                status.HTTP_400_BAD_REQUEST,
             )
+        MysteryPackEntry.objects.create(donor=request.user, card=card)
+        request.user.pack_credits += 1
+        request.user.save(update_fields=['pack_credits'])
 
     return Response(pack_status_payload(request.user), status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def pull_pack_card(request):
+    current = pack_status_payload(request.user)
+    if current['remaining_seconds'] > 0:
+        return Response(
+            {**current, 'error': 'Wait for the cooldown before pulling again.'},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+    if current['credits'] < 1:
+        return Response(
+            {**current, 'error': 'Trade a card into the pack before you can pull.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if current['other_count'] < 1:
+        return Response(
+            {**current, 'error': 'The mystery pack has no cards from other players yet.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    with transaction.atomic():
+        User = get_user_model()
+        user = User.objects.select_for_update().get(pk=request.user.pk)
+        remaining = pack_remaining_seconds(user)
+        if remaining > 0:
+            return Response(
+                {**pack_status_payload(user), 'error': 'Wait for the cooldown before pulling again.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        if user.pack_credits < 1:
+            return Response(
+                {**pack_status_payload(user), 'error': 'Trade a card into the pack before you can pull.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ids = list(MysteryPackEntry.objects.exclude(donor=user).values_list('id', flat=True))
+        if not ids:
+            return Response(
+                {**pack_status_payload(user), 'error': 'The mystery pack has no cards from other players yet.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        entry = MysteryPackEntry.objects.select_for_update().filter(pk=random.choice(ids)).first()
+        if entry is None or entry.donor_id == user.id:
+            return Response(
+                {**pack_status_payload(user), 'error': 'That pack card is no longer available.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        card = Card.objects.select_for_update().get(pk=entry.card_id)
+        donor = entry.donor
+        entry.delete()
+        card.owner = user
+        card.save(update_fields=['owner'])
+        opening = PackOpening.objects.create(user=user)
+        PackPull.objects.create(opening=opening, card=card, from_user=donor)
+        user.pack_credits -= 1
+        user.last_pack_pull_at = timezone.now()
+        user.save(update_fields=['pack_credits', 'last_pack_pull_at'])
+        request.user.pack_credits = user.pack_credits
+        request.user.last_pack_pull_at = user.last_pack_pull_at
+
+    return Response(pack_status_payload(request.user), status=status.HTTP_201_CREATED)
+
+
+# Backwards-compatible alias used by older clients.
+open_pack = pull_pack_card

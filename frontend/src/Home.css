@@ -7,6 +7,23 @@
   gap: 28px;
   padding: 28px 20px 32px;
   box-sizing: border-box;
+  position: relative;
+}
+
+.pack-credits {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e56a2a;
+  color: #fff;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  z-index: 2;
 }
 
 .mystery-pack,
@@ -98,9 +115,21 @@
   border-radius: 999px;
 }
 
-.mystery-pack .primary:disabled {
+.mystery-pack .primary:disabled,
+.pack-actions .ghost:disabled,
+.pack-pick-card:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+}
+
+.pack-actions .ghost,
+.pack-picker-header .ghost {
+  width: 100%;
+}
+
+.pack-picker-header .ghost {
+  width: auto;
+  flex: 0 0 auto;
 }
 
 .pack-hint {
@@ -169,4 +198,98 @@
   font-size: 12px;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.pack-count {
+  margin: 0 0 16px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.pack-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pack-picker-overlay,
+.pack-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(12, 12, 16, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border: 0;
+  cursor: pointer;
+}
+
+.pack-picker {
+  width: min(440px, 100%);
+  max-height: min(80svh, 640px);
+  overflow: auto;
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: default;
+}
+
+.pack-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pack-picker-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.pack-pick-card {
+  width: 100%;
+  cursor: pointer;
+}
+
+.pack-reveal-card {
+  width: min(240px, 72vw);
+  aspect-ratio: 2 / 3;
+  border: 3px solid #77777f;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #25252a;
+  position: relative;
+  transform: scale(0.01);
+  animation: pack-grow 0.7s ease-out forwards;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.pack-reveal-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pack-reveal-meta {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  color: #fff;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes pack-grow {
+  from {
+    transform: scale(0.01);
+  }
+  to {
+    transform: scale(1);
+  }
 }
