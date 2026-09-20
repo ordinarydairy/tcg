@@ -52,7 +52,6 @@ function Profile() {
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [bio, setBio] = useState(user?.bio || '')
   const [bioStatus, setBioStatus] = useState('')
-  const [savingBio, setSavingBio] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [cards, setCards] = useState([])
   const [uploadQueue, setUploadQueue] = useState([])
@@ -63,6 +62,9 @@ function Profile() {
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
   const [photoStatus, setPhotoStatus] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [savingProfile, setSavingProfile] = useState(false)
   const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
@@ -178,27 +180,34 @@ function Profile() {
     }
   }
 
-  async function saveBio() {
-    if (savingBio) {
+  async function saveProfileEdit() {
+    if (savingProfile) {
       return
     }
-    setSavingBio(true)
+    setSavingProfile(true)
     setBioStatus('')
     try {
-      await updateProfile({ bio })
+      await updateProfile({ display_name: draftName, bio })
+      setEditing(false)
       setBioStatus('Saved')
     } catch (error) {
-      setBioStatus(error.message || 'Could not save bio.')
+      setBioStatus(error.message || 'Could not save profile.')
     } finally {
-      setSavingBio(false)
+      setSavingProfile(false)
     }
   }
 
-  function handleBioKeyDown(event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      saveBio()
-    }
+  function startEditing() {
+    setDraftName(user?.display_name || '')
+    setBio(user?.bio || '')
+    setBioStatus('')
+    setEditing(true)
+  }
+
+  function cancelEditing() {
+    setBio(user?.bio || '')
+    setEditing(false)
+    setBioStatus('')
   }
 
   async function handlePhotoChange(event) {
@@ -305,55 +314,96 @@ function Profile() {
       </header>
 
       <section className="profile-identity">
-        <div className="profile-avatar">
-          {photoSrc && !photoFailed ? (
-            <img
-              src={photoSrc}
-              alt={`${displayName}'s profile`}
-              onError={() => setPhotoFailed(true)}
-            />
-          ) : (
-            <div className="profile-avatar-placeholder" aria-hidden="true">
-              {displayName.slice(0, 1).toUpperCase()}
-            </div>
-          )}
-        </div>
-        <h1 className="profile-name">{displayName}</h1>
         {isOwn ? (
-          <>
-            <label className="profile-photo-button" htmlFor={fileInputId}>
-              Change photo
-            </label>
-            {photoStatus ? <p className="profile-bio-hint">{photoStatus}</p> : null}
+          <label className="profile-avatar profile-avatar-edit" htmlFor={fileInputId} aria-label="Change profile photo">
+            {photoSrc && !photoFailed ? (
+              <img
+                src={photoSrc}
+                alt={`${displayName}'s profile`}
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <div className="profile-avatar-placeholder" aria-hidden="true">
+                {displayName.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </label>
+        ) : (
+          <div className="profile-avatar">
+            {photoSrc && !photoFailed ? (
+              <img
+                src={photoSrc}
+                alt={`${displayName}'s profile`}
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <div className="profile-avatar-placeholder" aria-hidden="true">
+                {displayName.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </div>
+        )}
+        {isOwn ? (
+          <input
+            id={fileInputId}
+            className="profile-photo-input"
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+          />
+        ) : null}
+        {photoStatus ? <p className="profile-bio-hint">{photoStatus}</p> : null}
+        {editing ? (
+          <label className="profile-bio-label" htmlFor={`${bioId}-name`}>
+            Display name
             <input
-              id={fileInputId}
-              className="profile-photo-input"
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
+              id={`${bioId}-name`}
+              className="profile-name-input"
+              value={draftName}
+              maxLength={50}
+              onChange={(event) => setDraftName(event.target.value)}
             />
-            <label className="profile-bio-label" htmlFor={bioId}>
-              Bio
-            </label>
-            <textarea
-              id={bioId}
-              className="profile-bio"
-              rows={3}
-              maxLength={500}
-              value={bio}
-              onChange={(event) => {
-                setBio(event.target.value)
-                setBioStatus('')
-              }}
-              onKeyDown={handleBioKeyDown}
-              placeholder="Write a short bio. Press Enter to save."
-            />
-            <p className="profile-bio-hint">
-              {savingBio ? 'Saving…' : bioStatus || 'Press Enter to save. Shift+Enter adds a new line.'}
-            </p>
-          </>
+          </label>
+        ) : (
+          <h1 className="profile-name">{displayName}</h1>
+        )}
+        {player?.tag ? <p className="profile-tag">#{player.tag}</p> : null}
+        {isOwn ? (
+          editing ? (
+            <>
+              <label className="profile-bio-label" htmlFor={bioId}>
+                Bio
+              </label>
+              <textarea
+                id={bioId}
+                className="profile-bio"
+                rows={3}
+                maxLength={500}
+                value={bio}
+                onChange={(event) => setBio(event.target.value)}
+                placeholder="Write a short bio."
+              />
+              {bioStatus ? <p className="form-error">{bioStatus}</p> : null}
+              <div className="profile-edit-actions">
+                <button type="button" className="primary profile-friend-button" onClick={saveProfileEdit} disabled={savingProfile}>
+                  {savingProfile ? 'Saving…' : 'Save'}
+                </button>
+                <button type="button" className="ghost" onClick={cancelEditing} disabled={savingProfile}>
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="profile-bio-text">{user?.bio?.trim() ? user.bio : 'No bio yet.'}</p>
+              <button type="button" className="ghost profile-friend-button" onClick={startEditing}>
+                Edit profile
+              </button>
+            </>
+          )
         ) : (
           <>
+            <p className="profile-bio-text">{player?.bio?.trim() ? player.bio : 'No bio yet.'}</p>
             {error ? <p className="form-error">{error}</p> : null}
             {player?.friendship_status && player.friendship_status !== 'self' ? (
               <button

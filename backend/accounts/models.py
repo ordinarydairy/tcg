@@ -1,5 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
+import secrets
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
@@ -10,6 +11,10 @@ from django.utils import timezone
 def profile_upload_to(instance, filename):
     suffix = Path(filename).suffix.lower() or '.jpg'
     return f'profiles/{uuid4().hex}{suffix}'
+
+
+def generate_player_tag():
+    return secrets.token_hex(4).upper()
 
 
 class UserManager(BaseUserManager):
@@ -36,6 +41,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     display_name = models.CharField(max_length=50)
+    tag = models.CharField(max_length=8, unique=True, default=generate_player_tag, editable=False)
     profile_photo = models.ImageField(upload_to=profile_upload_to, blank=True)
     bio = models.TextField(blank=True, max_length=500)
     is_active = models.BooleanField(default=True)

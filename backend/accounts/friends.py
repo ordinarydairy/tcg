@@ -87,11 +87,11 @@ class FriendSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        query = request.query_params.get('q', '').strip()
+        query = request.query_params.get('q', '').strip().lstrip('#')
         if len(query) < 1:
             return Response({'users': []})
         players = User.objects.exclude(id=request.user.id).filter(
-            display_name__icontains=query,
+            Q(display_name__icontains=query) | Q(tag__icontains=query),
         ).order_by('display_name')[:20]
         return Response({
             'users': PlayerSerializer(players, many=True, context={'viewer': request.user, 'request': request}).data,
