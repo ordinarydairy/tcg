@@ -6,7 +6,7 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from dotenv import load_dotenv
@@ -175,6 +175,8 @@ User's story:
             owner=request.user,
             creator=request.user,
             image=image,
+            image_content_type=(image.content_type or 'image/jpeg')[:100],
+            image_data=image_bytes,
             story=story,
             photo_quality=scores.photo_quality,
             location_significance=scores.location_significance,
@@ -218,11 +220,17 @@ def card_image(request, card_id):
     card = get_object_or_404(Card, pk=card_id)
     if not can_view_player_cards(request.user, card.owner_id):
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    content_type = (
+        card.image_content_type
+        or mimetypes.guess_type(card.image.name)[0]
+        or 'application/octet-stream'
+    )
     try:
         image_file = card.image.open('rb')
     except FileNotFoundError:
+        if card.image_data:
+            return HttpResponse(bytes(card.image_data), content_type=content_type)
         return Response({'detail': 'Image not found.'}, status=status.HTTP_404_NOT_FOUND)
-    content_type = mimetypes.guess_type(card.image.name)[0] or 'application/octet-stream'
     return FileResponse(image_file, content_type=content_type)
 
 

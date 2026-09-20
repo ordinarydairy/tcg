@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 from uuid import uuid4
 
@@ -32,6 +33,8 @@ class Card(models.Model):
         related_name='created_cards',
     )
     image = models.ImageField(upload_to=card_upload_to, storage=card_storage)
+    image_content_type = models.CharField(max_length=100)
+    image_data = models.BinaryField(null=True, blank=True)
     story = models.TextField(blank=True)
 
     photo_quality = models.IntegerField()
@@ -48,6 +51,10 @@ class Card(models.Model):
     def save(self, *args, **kwargs):
         if not self.creator_id and self.owner_id:
             self.creator_id = self.owner_id
+        if not self.image_content_type:
+            uploaded_type = getattr(self.image, 'content_type', None)
+            guessed = mimetypes.guess_type(getattr(self.image, 'name', '') or '')[0]
+            self.image_content_type = (uploaded_type or guessed or 'application/octet-stream')[:100]
         super().save(*args, **kwargs)
 
     def __str__(self):
