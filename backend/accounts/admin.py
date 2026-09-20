@@ -7,11 +7,11 @@ from .models import Friendship, User
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     ordering = ('email',)
-    list_display = ('email', 'display_name', 'is_staff')
-    search_fields = ('email', 'display_name')
+    list_display = ('email', 'display_name', 'tag', 'is_staff')
+    search_fields = ('email', 'display_name', 'tag')
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Profile', {'fields': ('display_name', 'profile_photo')}),
+        ('Profile', {'fields': ('display_name', 'tag', 'bio', 'profile_photo')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
@@ -22,6 +22,7 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
     filter_horizontal = ('groups', 'user_permissions')
+    readonly_fields = ('tag',)
 
 
 @admin.register(Friendship)

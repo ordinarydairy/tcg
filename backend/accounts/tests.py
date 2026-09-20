@@ -31,10 +31,36 @@ class AuthApiTests(TestCase):
         self.assertEqual(body['email'], 'player@example.com')
         self.assertEqual(body['display_name'], 'Claire')
         self.assertTrue(body['profile_photo'])
+        self.assertTrue(body['tag'])
+        self.assertEqual(len(body['tag']), 8)
 
         me = self.client.get(reverse('me'))
         self.assertEqual(me.status_code, 200)
         self.assertEqual(me.json()['user']['display_name'], 'Claire')
+        self.assertEqual(me.json()['user']['tag'], body['tag'])
+
+    def test_register_allows_duplicate_display_names(self):
+        first = self.client.post(
+            reverse('register'),
+            {
+                'email': 'one@example.com',
+                'password': 'secretpass123',
+                'display_name': 'Claire',
+                'profile_photo': png_file('one.png'),
+            },
+        )
+        second = self.client.post(
+            reverse('register'),
+            {
+                'email': 'two@example.com',
+                'password': 'secretpass123',
+                'display_name': 'Claire',
+                'profile_photo': png_file('two.png'),
+            },
+        )
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        self.assertNotEqual(first.json()['tag'], second.json()['tag'])
 
     def test_login_and_logout(self):
         User.objects.create_user(
@@ -104,6 +130,21 @@ class AuthApiTests(TestCase):
         user.refresh_from_db()
         self.assertEqual(user.bio, 'Collector of rare cards.')
 
+    def test_owner_can_change_display_name(self):
+        user = User.objects.create_user(
+            email='player@example.com',
+            password='secretpass123',
+            display_name='Claire',
+        )
+        self.client.force_login(user)
+        response = self.client.patch(
+            reverse('me'),
+            {'display_name': 'Claire W'},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['user']['display_name'], 'Claire W')
+
     def test_owner_can_change_profile_photo(self):
         user = User.objects.create_user(
             email='player@example.com',
@@ -158,6 +199,9 @@ class FriendshipApiTests(TestCase):
         search = self.client.get(reverse('friend-search'), {'q': 'sa'})
         self.assertEqual(search.json()['users'][0]['display_name'], 'Sam')
 
+        by_tag = self.client.get(reverse('friend-search'), {'q': self.sam.tag})
+        self.assertEqual(by_tag.json()['users'][0]['display_name'], 'Sam')
+
     def test_send_request_accept_and_unfriend(self):
         send = self.client.post(
             reverse('friend-request'),
@@ -181,8 +225,12 @@ class FriendshipApiTests(TestCase):
         friends = self.client.get(reverse('friends-list'))
         self.assertEqual(friends.json()['friends'][0]['display_name'], 'Claire')
 
+        self.claire.bio = 'Hello from Claire'
+        self.claire.save(update_fields=['bio'])
         profile = self.client.get(reverse('player-detail', args=[self.claire.id]))
         self.assertEqual(profile.json()['friendship_status'], 'friends')
+        self.assertEqual(profile.json()['bio'], 'Hello from Claire')
+        self.assertTrue(profile.json()['tag'])
         self.assertNotIn('email', profile.json())
 
         remove = self.client.delete(reverse('friend-detail', args=[self.claire.id]))
