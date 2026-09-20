@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { fetchFriends, fetchTrades } from './api'
 import './Layout.css'
 
 function HomeIcon() {
@@ -26,6 +28,29 @@ function ProfileIcon() {
 }
 
 function Layout() {
+  const [hasAlerts, setHasAlerts] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadAlerts() {
+      try {
+        const [friends, trades] = await Promise.all([fetchFriends(), fetchTrades()])
+        if (cancelled) return
+        const incomingFriends = Boolean(friends.incoming?.length)
+        const incomingTrades = (trades.open || []).some((item) => !item.is_initiator)
+        setHasAlerts(incomingFriends || incomingTrades)
+      } catch {
+        if (!cancelled) setHasAlerts(false)
+      }
+    }
+    loadAlerts()
+    const handle = setInterval(loadAlerts, 4000)
+    return () => {
+      cancelled = true
+      clearInterval(handle)
+    }
+  }, [])
+
   return (
     <div className="app-shell">
       <div className="app-content">
@@ -37,8 +62,15 @@ function Layout() {
           <span className="tab-label">Home</span>
           <span className="tab-dot" aria-hidden="true" />
         </NavLink>
-        <NavLink to="/friends" className="tab">
-          <FriendsIcon />
+        <NavLink
+          to="/friends"
+          className="tab"
+          aria-label={hasAlerts ? 'Friends, new requests' : 'Friends'}
+        >
+          <span className="tab-icon-wrap">
+            <FriendsIcon />
+            {hasAlerts ? <span className="tab-badge" aria-hidden="true" /> : null}
+          </span>
           <span className="tab-label">Friends</span>
           <span className="tab-dot" aria-hidden="true" />
         </NavLink>

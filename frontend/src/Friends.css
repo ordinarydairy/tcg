@@ -42,8 +42,26 @@
   padding: 10px 12px;
 }
 
+.friends-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.friends-section-heading h2 {
+  margin: 0;
+}
+
 .friends-section h2 {
   margin-bottom: 12px;
+}
+
+.friends-see-all {
+  width: auto;
+  margin: 0;
+  padding: 6px 10px;
 }
 
 .friends-empty {
