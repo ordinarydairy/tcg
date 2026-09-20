@@ -146,10 +146,8 @@
 }
 
 .tab-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
   display: block;
+  overflow: visible;
 }
 
 @media (max-width: 420px) {
@@ -162,11 +160,6 @@
   .tab {
     font-size: 10px;
     min-height: 68px;
-  }
-
-  .tab-logo {
-    width: 34px;
-    height: 34px;
   }
 }
 

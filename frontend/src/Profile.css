@@ -19,17 +19,18 @@
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: transparent;
+  background: #ffffff;
   color: #8a8f98;
   cursor: pointer;
   display: grid;
   place-items: center;
+  box-shadow: 0 2px 8px rgba(42, 63, 120, 0.08);
 }
 
 .settings-gear:hover,
 .settings-gear[aria-expanded='true'] {
   color: var(--text-h);
-  background: var(--social-bg);
+  background: #ffffff;
 }
 
 .settings-gear-icon {
