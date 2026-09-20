@@ -250,7 +250,9 @@
 .card-cropper {
   position: relative;
   width: 100%;
-  height: min(360px, 50svh);
+  aspect-ratio: 4 / 3;
+  max-height: 50svh;
+
   background: var(--code-bg);
   border-radius: 10px;
   overflow: hidden;
@@ -298,18 +300,25 @@
 }
 
 .blank-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--social-bg);
-  padding: 12px;
+  position: relative;
+
+  width: 100%;
   aspect-ratio: 2 / 3;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+
+  padding: 0;
+  overflow: hidden;
+
+  border: 3px solid #77777f;
+  border-radius: 16px;
+
+  background: #25252a;
 }
 
 .blank-card-art {
-  flex: 1;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  flex: 0 0 auto;
+
   border-radius: 6px;
   background: var(--code-bg);
   border: 1px dashed var(--border);
@@ -336,19 +345,75 @@
   color: var(--text-h);
 }
 
+
+.card-description-box {
+  position: absolute;
+
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+
+  z-index: 2;
+
+  padding: 10px 12px;
+
+  border: 2px solid #77777f;
+  border-radius: 8px;
+
+  background: rgba(35, 35, 40, 0.68);
+
+  color: #e2e2dc;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+
+  text-align: left;
+
+  backdrop-filter: blur(4px);
+}
+
+.card-description {
+  margin: 0;
+
+  color: #000;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+
+  -webkit-text-stroke: 0.5px #fff;
+  paint-order: stroke fill;
+}
+
 .blank-card-button {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  position: relative;
+
+  display: block;
   width: 100%;
   height: 100%;
+
   padding: 0;
   border: 0;
+
   background: transparent;
   color: inherit;
+
   font: inherit;
   text-align: left;
   cursor: pointer;
+
+  overflow: hidden;
+}
+
+.card-full-image {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  display: block;
 }
 
 .card-story-dialog {
@@ -372,7 +437,7 @@
 }
 
 .card-story-art {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 4 / 3;
   border-radius: 10px;
   overflow: hidden;
   background: var(--code-bg);
@@ -413,3 +478,212 @@
   align-self: flex-start;
   margin-top: 8px;
 }
+/* =========================
+   FLIP CARD
+   ========================= */
+
+.card-flip-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.card-flip {
+  width: min(320px, 75vw);
+  aspect-ratio: 2 / 3;
+
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.card-flip-inner {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.card-flip.is-flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  border: 3px solid #77777f;
+  border-radius: 18px;
+
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+
+/* FRONT */
+/* =========================
+   CARD FRONT
+   ========================= */
+
+.card-front {
+  position: absolute;
+  background: #29292d;
+}
+
+.card-full-image {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  display: block;
+}
+
+.card-front.light .card-rarity-stars {
+  color: #e3e1da;
+}
+
+.card-front.dark .card-rarity-stars {
+  color: #29292d;
+}
+
+
+/* =========================
+   CARD BACK
+   ========================= */
+
+.card-back {
+  position: absolute;
+
+  padding: 0;
+
+  transform: rotateY(180deg);
+
+  background: #29292d;
+}
+
+.card-back-info {
+  position: absolute;
+
+  top: 18px;
+  left: 18px;
+  right: 55px;
+
+  z-index: 3;
+
+  text-align: left;
+}
+
+.card-back-rarity {
+  margin: 0;
+
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+
+  text-transform: uppercase;
+}
+
+.card-back-username {
+  margin: 5px 0 0;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  opacity: 0.8;
+}
+
+.card-back-description {
+  margin: 32px 0 0;
+
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+.card-back.light .card-back-rarity,
+.card-back.light .card-back-username,
+.card-back.light .card-back-description,
+.card-back.light .card-rarity-stars {
+  color: #e3e1da;
+}
+
+.card-back.dark .card-back-rarity,
+.card-back.dark .card-back-username,
+.card-back.dark .card-back-description,
+.card-back.dark .card-rarity-stars {
+  color: #29292d;
+}
+
+
+.card-back-image {
+  position: absolute;
+
+  inset: -20px;
+
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+
+  object-fit: cover;
+
+  filter: blur(18px);
+  transform: scale(1.08);
+}
+
+.card-back-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(35, 35, 40, 0.25);
+}
+
+.card-back-content {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+}
+
+
+/* TEXT UNDER CARD */
+
+.card-flip-hint {
+  margin: 0;
+
+  font-size: 13px;
+  color: #88888f;
+}
+
+/* =========================
+   RARITY STARS
+   ========================= */
+
+.card-rarity-stars {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  font-size: 24px;
+  line-height: 0.9;
+}
+
