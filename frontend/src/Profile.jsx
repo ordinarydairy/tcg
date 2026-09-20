@@ -62,6 +62,7 @@ function Profile() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [photoFailed, setPhotoFailed] = useState(false)
+  const [photoStatus, setPhotoStatus] = useState('')
   const player = isOwn ? user : remotePlayer
 
   useEffect(() => {
@@ -200,19 +201,36 @@ function Profile() {
     }
   }
 
-  function handlePhotoChange(event) {
+  async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) {
       return
     }
 
     const nextUrl = URL.createObjectURL(file)
+    setPhotoFailed(false)
+    setPhotoStatus('Saving photo…')
     setAvatarUrl((previousUrl) => {
       if (previousUrl) {
         URL.revokeObjectURL(previousUrl)
       }
       return nextUrl
     })
+    try {
+      const body = new FormData()
+      body.append('profile_photo', file)
+      await updateProfile(body)
+      setPhotoStatus('Photo saved')
+      setAvatarUrl((previousUrl) => {
+        if (previousUrl) {
+          URL.revokeObjectURL(previousUrl)
+        }
+        return null
+      })
+    } catch (error) {
+      setPhotoStatus(error.message || 'Could not save photo.')
+    }
   }
 
   async function handleFriendship() {
@@ -306,6 +324,7 @@ function Profile() {
             <label className="profile-photo-button" htmlFor={fileInputId}>
               Change photo
             </label>
+            {photoStatus ? <p className="profile-bio-hint">{photoStatus}</p> : null}
             <input
               id={fileInputId}
               className="profile-photo-input"

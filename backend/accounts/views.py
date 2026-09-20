@@ -53,6 +53,7 @@ class LogoutView(APIView):
 
 class MeView(APIView):
     permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
         if not request.user.is_authenticated:

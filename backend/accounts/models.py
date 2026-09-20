@@ -1,7 +1,15 @@
+from pathlib import Path
+from uuid import uuid4
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
+
+
+def profile_upload_to(instance, filename):
+    suffix = Path(filename).suffix.lower() or '.jpg'
+    return f'profiles/{uuid4().hex}{suffix}'
 
 
 class UserManager(BaseUserManager):
@@ -28,7 +36,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     display_name = models.CharField(max_length=50)
-    profile_photo = models.ImageField(upload_to='profiles/', blank=True)
+    profile_photo = models.ImageField(upload_to=profile_upload_to, blank=True)
     bio = models.TextField(blank=True, max_length=500)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

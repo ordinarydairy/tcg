@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Q
 from rest_framework import serializers
@@ -16,7 +18,10 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'email', 'display_name', 'profile_photo')
 
     def get_profile_photo(self, user):
-        return f'/api/users/{user.id}/photo/' if user.profile_photo else None
+        if not user.profile_photo:
+            return None
+        version = Path(user.profile_photo.name).stem
+        return f'/api/users/{user.id}/photo/?v={version}'
 
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -29,7 +34,10 @@ class PlayerSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_profile_photo(self, player):
-        return f'/api/users/{player.id}/photo/' if player.profile_photo else None
+        if not player.profile_photo:
+            return None
+        version = Path(player.profile_photo.name).stem
+        return f'/api/users/{player.id}/photo/?v={version}'
 
     def get_friendship_status(self, player):
         viewer = self.context.get('viewer')
@@ -66,12 +74,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
+    profile_photo = serializers.ImageField(required=False)
+
     class Meta:
         model = User
-        fields = ('bio',)
+        fields = ('bio', 'profile_photo')
 
     def validate_bio(self, value):
         return value.strip()[:500]
+
+    def update(self, instance, validated_data):
+        photo = validated_data.get('profile_photo')
+        if photo and instance.profile_photo:
+            instance.profile_photo.delete(save=False)
+        return super().update(instance, validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
